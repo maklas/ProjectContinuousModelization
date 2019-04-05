@@ -19,16 +19,16 @@ import ru.maklas.model.utils.gsm_lib.EmptyStateManager;
 import ru.maklas.model.utils.gsm_lib.MultilayerStateManager;
 import ru.maklas.model.utils.gsm_lib.State;
 
-public class ProjectGenetics extends ApplicationAdapter {
+public class ProjectContinuousModelization extends ApplicationAdapter {
 
     private State launchState;
     private Batch batch;
 
-    public ProjectGenetics(State state) {
+    public ProjectContinuousModelization(State state) {
         this.launchState = state;
     }
 
-    public ProjectGenetics() {
+    public ProjectContinuousModelization() {
         this(new MainMenuState());
     }
 

@@ -8,8 +8,6 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import ru.maklas.model.mnw.MNW;
-import ru.maklas.model.utils.Config;
-import ru.maklas.model.utils.Log;
 
 public class AndroidLauncher extends AndroidApplication {
 
@@ -34,7 +32,7 @@ public class AndroidLauncher extends AndroidApplication {
 
 
     private ApplicationListener getLauncher() {
-        return new ProjectGenetics();
+        return new ProjectContinuousModelization();
     }
 
     private void loadWithAds(AndroidApplicationConfiguration config){

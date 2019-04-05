@@ -2,7 +2,7 @@ package ru.maklas.model.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import ru.maklas.model.ProjectGenetics;
+import ru.maklas.model.ProjectContinuousModelization;
 import ru.maklas.model.mnw.MNW;
 import ru.maklas.model.utils.Log;
 
@@ -15,6 +15,6 @@ public class DesktopLauncher {
         config.samples = 4;
         config.title = MNW.GAME_NAME;
         Log.logger = new FileLogger();
-        new LwjglApplication(new ProjectGenetics(), config);
+        new LwjglApplication(new ProjectContinuousModelization(), config);
     }
 }
