@@ -1,0 +1,35 @@
+## Java
+*.class
+*.war
+*.ear
+hs_err_pid*
+
+## Android Studio and Intellij and Android in general
+/android/libs/armeabi/
+/android/libs/armeabi-v7a/
+/android/libs/arm64-v8a/
+/android/libs/x86/
+/android/libs/x86_64/
+/android/gen/
+/.idea/*
+!/.idea/runConfigurations/
+*.ipr
+*.iws
+*.iml
+
+## Builds
+/build/
+/android/build/
+/core/build/
+/desktop/build/
+
+## Gradle
+/local.properties
+.gradle/
+
+## Logs
+/logs/
+
+## Save
+/android/assets/*.mnw
+/saves/

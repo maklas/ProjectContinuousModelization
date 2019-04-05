@@ -1,0 +1,122 @@
+buildscript {
+    
+
+    repositories {
+        google()
+        maven { url "https://maven.google.com" }
+        jcenter()
+        maven { url "https://jitpack.io" }
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://maven.fabric.io/public' }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'io.fabric.tools:gradle:1.27.0'
+    }
+}
+
+allprojects {
+    apply plugin: "idea"
+
+    version = '0.0.4'
+    ext {
+        appName = "ProjectContinuousModelization"
+        gdxVersion = '1.9.9'
+
+        maklasGdxVersion = '1.9.9-1'
+        mengineVersion = '0.5.2'
+        mLibsVersion = '0.2.1'
+        mnetVersion = '0.5'
+        mExpressionVersion = '0.1.5'
+        visuiVersion = '1.4.2'
+    }
+
+    repositories {
+        google()
+        maven { url "https://maven.google.com" }
+        jcenter()
+        maven { url "https://jitpack.io" }
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    }
+
+    idea {
+        module {
+            excludeDirs += file("build")
+            excludeDirs += file("captures")
+            excludeDirs += file("core/build")
+            excludeDirs += file("core/old")
+            excludeDirs += file("android/build")
+            excludeDirs += file("desktop/build")
+
+            excludeDirs += file("android/release")
+            excludeDirs += file("logs")
+            excludeDirs += file("saves")
+
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.name == 'gdx') {
+                details.useTarget "com.github.maklas:gdx-fork-maklas:$maklasGdxVersion"
+            }
+        }
+    }
+
+}
+
+project(":desktop") {
+    apply plugin: "java"
+
+    dependencies {
+        compile project(":core")
+        compile "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
+        compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+
+    }
+}
+
+project(":android") {
+    apply plugin: "android"
+    apply plugin: 'io.fabric'
+
+    configurations { natives }
+
+    dependencies {
+        implementation project(":core")
+        implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
+        natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
+        implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
+        natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64"
+    }
+}
+
+project(":core") {
+    apply plugin: "java"
+
+    dependencies {
+        compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+        compile "com.github.maklas:MEngine:$mengineVersion"
+        compile "com.github.maklas:MLibs:$mLibsVersion"
+        compile "com.github.maklas:MExpression:$mExpressionVersion"
+        compile "com.kotcrab.vis:vis-ui:$visuiVersion"
+    }
+
+}
