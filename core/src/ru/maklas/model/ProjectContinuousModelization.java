@@ -107,7 +107,7 @@ public class ProjectContinuousModelization extends ApplicationAdapter {
 
             MNW.gsm.dispose();
             batch.dispose();
-            A.getAllAssets().foreach(Asset::dispose);
+            A.all().foreach(Asset::dispose);
             Log.logger.dispose();
             Utils.executor.shutdown();
         } catch (Exception e) {

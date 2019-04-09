@@ -1,5 +1,11 @@
 package ru.maklas.model.functions;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+
 public class FunctionUtils {
 
     /**
@@ -31,6 +37,38 @@ public class FunctionUtils {
         return _findMinimalPoint(fun, Math.max(minX, lowestX - step), Math.min(maxX, lowestX + step), step / (maxX - minX), iterations - 1);
     }
 
+
+    private static final Array<Color> goodColors = Array.with(Color.BLUE, Color.RED, Color.FOREST, Color.BROWN, Color.VIOLET, Color.ORANGE);
+    public static Color goodFunctionColor(int id){
+        id = id >= 0 ? id : -id;
+        id = id % goodColors.size;
+        return goodColors.get(id);
+    }
+
+    public static void renderPoints(ShapeRenderer sr, Array<Vector2> points){
+        for (int i = 1; i < points.size; i++) {
+            Vector2 a = points.get(i - 1);
+            Vector2 b = points.get(i);
+            sr.line(a, b);
+        }
+    }
+
+    public static Array<Vector2> euler(GraphFunction f, float rangeStart, float rangeEnd, float step, float y0){
+        float x = rangeStart;
+        float y = y0;
+
+        Array<Vector2> points = new Array<>();
+        int iterations = MathUtils.ceil((rangeEnd - rangeStart) / step);
+        points.add(new Vector2(x, y));
+        for (int i = 0; i < iterations; i++) {
+            x += step;
+            float t = (float) f.f(x);
+            y += t * step;
+            points.add(new Vector2(x, y));
+        }
+
+        return points;
+    }
 
 
 

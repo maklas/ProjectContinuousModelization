@@ -19,7 +19,7 @@ public class A {
         allAssets.add(skins);
     }
 
-    public static Array<Asset> getAllAssets() {
+    public static Array<Asset> all() {
         return allAssets;
     }
 
