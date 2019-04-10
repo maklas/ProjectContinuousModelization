@@ -70,6 +70,26 @@ public class FunctionUtils {
         return points;
     }
 
+    public static Array<Vector2> rk4(GraphFunction f, float rangeStart, float rangeEnd, float step, float y0){
+        float x = rangeStart;
+        float y = y0;
+
+        Array<Vector2> points = new Array<>();
+        int iterations = MathUtils.ceil((rangeEnd - rangeStart) / step);
+        points.add(new Vector2(x, y));
+        for (int i = 0; i < iterations; i++) {
+            x += step;
+
+            float k1 = (float) f.f(x);
+            float k2 = (float) f.f(x + step/2);
+            float k3 = (float) f.f(x + step);
+            y += 0.25 * (k1 + 2 * k2 + k3);
+            points.add(new Vector2(x, y));
+        }
+
+        return points;
+    }
+
 
 
 }

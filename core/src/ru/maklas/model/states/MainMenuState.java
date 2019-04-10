@@ -12,6 +12,8 @@ import ru.maklas.expression.Expression;
 import ru.maklas.expression.ExpressionEvaluationException;
 import ru.maklas.model.assets.A;
 import ru.maklas.model.assets.Asset;
+import ru.maklas.model.functions.CustomExpressionFunction;
+import ru.maklas.model.functions.FunctionUtils;
 import ru.maklas.model.logic.Compiler;
 import ru.maklas.model.logic.EvaluationException;
 import ru.maklas.model.logic.model.Model;
@@ -75,7 +77,7 @@ public class MainMenuState extends State {
             }
 
 
-            pushState(new FunctionGraphState(new Array<>(), Array.with(points1, points2, points3, points4)));
+            //pushState(new FunctionGraphState(new Array<>(), Array.with(points1, points2, points3, points4)));
         } catch (ExpressionEvaluationException e1) {
             e1.printStackTrace();
         }

@@ -128,7 +128,63 @@ public class Compiler {
             if (name != null && expression != null){
                 model.getEquations().add(new Equation(name, expression));
             }
+        } else if ("params".equalsIgnoreCase(header.getTextValue())){
+            int i = start;
+            while (i < end){
+                if (tokens.get(i).getType() == TokenType.end){
+                    i++;
+                }
+                Token firstToken = tokens.get(i);
+                if (firstToken.getType() != TokenType.word){
+                    throw new EvaluationException("Unexpected token. Expected parameter name", firstToken);
+                }
+                expectToken(i + 1, tokens, TokenType.equals, "'='", firstToken);
+                String paramName = firstToken.getTextValue();
+                int valueStart = i + 2;
 
+                if ("method".equalsIgnoreCase(paramName)){
+                    expectToken(valueStart, tokens, TokenType.word, "method name", tokens.get(valueStart - 1));
+                    model.setMethod(tokens.get(valueStart));
+                    i = valueStart + 1;
+                } else if ("step".equalsIgnoreCase(paramName)){
+                    expectToken(valueStart, tokens, TokenType.number, "number", tokens.get(valueStart - 1));
+                    model.setStep(tokens.get(valueStart));
+                    i = valueStart + 1;
+                } else if ("span".equalsIgnoreCase(paramName)){
+                    expectToken(valueStart, tokens, "[", "'['", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 1, tokens, TokenType.number, "span start", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 2, tokens, TokenType.comma, "','", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 3, tokens, TokenType.number, "span end", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 4, tokens, "]", "']'", tokens.get(valueStart - 1));
+                    model.setSpanStart(tokens.get(valueStart + 1));
+                    model.setSpanEnd(tokens.get(valueStart + 3));
+                    i = valueStart + 5;
+                } else if ("x0".equalsIgnoreCase(paramName)) {
+                    expectToken(valueStart, tokens, "[", "'['", tokens.get(valueStart - 1));
+                    int pos = 1;
+                    while (true){
+                        if (tokens.size)
+                    }
+                } else {
+                    throw new EvaluationException("Unexpected token", firstToken);
+                }
+            }
+        }
+    }
+
+    private static void expectToken(int index, Array<Token> tokens, TokenType type, String expectation, Token previousToken) throws EvaluationException {
+        if (tokens.size <= index){
+            throw new EvaluationException("Line not finished. Expected: " + expectation, previousToken);
+        } else if (tokens.get(index).getType() != type){
+            throw new EvaluationException("Unexpected token. Expected: " + expectation, tokens.get(index));
+        }
+    }
+
+    private static void expectToken(int index, Array<Token> tokens, String text, String expectation, Token previousToken) throws EvaluationException {
+        if (tokens.size <= index){
+            throw new EvaluationException("Line not finished. Expected: " + expectation, previousToken);
+        } else if (!text.equals(tokens.get(index).getTextValue())){
+            throw new EvaluationException("Unexpected token. Expected: " + expectation, tokens.get(index));
         }
     }
 
