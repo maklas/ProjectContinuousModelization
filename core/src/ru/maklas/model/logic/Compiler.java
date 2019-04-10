@@ -4,6 +4,7 @@ import com.badlogic.gdx.utils.Array;
 import org.apache.commons.lang3.StringUtils;
 import ru.maklas.model.logic.model.Equation;
 import ru.maklas.model.logic.model.Model;
+import ru.maklas.model.logic.model.Plot;
 import ru.maklas.model.logic.model.Var;
 
 import java.util.regex.Matcher;
@@ -50,9 +51,13 @@ public class Compiler {
             throw new EvaluationException("Header content is empty", header);
         }
         parseHeader(header, tokens, start, end, model);
-
+        validateModel(model);
 
         return model;
+    }
+
+    private static void validateModel(Model model) throws EvaluationException {
+        //TODO
     }
 
     private static void parseHeader(Token header, Array<Token> tokens, int start, int end, Model model) throws EvaluationException {
@@ -161,12 +166,85 @@ public class Compiler {
                     i = valueStart + 5;
                 } else if ("x0".equalsIgnoreCase(paramName)) {
                     expectToken(valueStart, tokens, "[", "'['", tokens.get(valueStart - 1));
-                    int pos = 1;
-                    while (true){
-                        if (tokens.size)
+                    if (tokens.size >= valueStart + 1 && "]".equals(tokens.get(valueStart + 1).getTextValue())){
+                        if (tokens.size >= valueStart + 2 && TokenType.end == tokens.get(valueStart + 2).getType()){
+                            i = valueStart + 4;
+                        } else {
+                            throw new EvaluationException("Unexpected token after " + paramName + " declaration.", tokens.get(valueStart + 2));
+                        }
+                    } else {
+                        int pos = valueStart + 1;
+                        boolean expNumber = true;
+                        while (true) {
+                            if (tokens.size <= pos) {
+                                throw new EvaluationException("Unexpected token, don't forget to close array declaration with ']'", tokens.last());
+                            }
+                            Token previous = tokens.get(pos - 1);
+                            Token token = tokens.get(pos);
+                            if (expNumber) {
+                                if (token.getType() != TokenType.number) {
+                                    expectToken(pos, tokens, TokenType.number, "number", previous);
+                                }
+                                model.getDefaults().add(token);
+                            } else {
+                                if ("]".equals(token.getTextValue())) {
+                                    expectToken(pos + 1, tokens, TokenType.end, "end of " + paramName + " declaration", token);
+                                    i = pos + 2;
+                                    break;
+                                } else if (token.getType() != TokenType.comma) {
+                                    expectToken(pos, tokens, TokenType.comma, "',' or ']'", previous);
+                                }
+                            }
+                            expNumber = !expNumber;
+                            pos++;
+                        }
+                    }
+                } else if ("plot".equalsIgnoreCase(paramName)) {
+                    expectToken(valueStart, tokens, "[", "'['", tokens.get(valueStart - 1));
+                    if (tokens.size >= valueStart + 1 && "]".equals(tokens.get(valueStart + 1).getTextValue())){
+                        if (tokens.size >= valueStart + 2 && TokenType.end == tokens.get(valueStart + 2).getType()){
+                            i = valueStart + 4;
+                        } else {
+                            throw new EvaluationException("Unexpected token after " + paramName + " declaration.", tokens.get(valueStart + 2));
+                        }
+                    } else {
+                        int pos = valueStart + 1;
+                        boolean expFun = true;
+                        while (true){
+                            if (tokens.size <= pos) {
+                                throw new EvaluationException("Unexpected token, don't forget to close array declaration with ']'", tokens.last());
+                            }
+                            Token previous = tokens.get(pos - 1);
+                            Token token = tokens.get(pos);
+                            if (expFun) {
+                                if (token.getType() != TokenType.word) {
+                                    expectToken(pos, tokens, TokenType.word, "function name", previous);
+                                }
+                                Token functionName = token;
+                                Token color = null;
+                                Token next = tokens.get(pos + 1);
+                                if ("(".equals(next.getTextValue())){
+                                    expectToken(pos + 2, tokens, TokenType.word, "color name", next);
+                                    expectToken(pos + 3, tokens, ")", ")", tokens.get(pos + 2));
+                                    color = tokens.get(pos + 2);
+                                    pos += 3;
+                                }
+                                model.getPlots().add(new Plot(functionName, color));
+                            } else {
+                                if ("]".equals(token.getTextValue())) {
+                                    expectToken(pos + 1, tokens, TokenType.end, "end of " + paramName + " declaration", token);
+                                    i = pos + 2;
+                                    break;
+                                } else if (token.getType() != TokenType.comma) {
+                                    expectToken(pos, tokens, TokenType.comma, "',' or ']'", previous);
+                                }
+                            }
+                            expFun = !expFun;
+                            pos++;
+                        }
                     }
                 } else {
-                    throw new EvaluationException("Unexpected token", firstToken);
+                    throw new EvaluationException("Unexpected parameter name", firstToken);
                 }
             }
         }

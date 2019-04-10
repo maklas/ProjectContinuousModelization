@@ -8,6 +8,8 @@ public class Model {
     private Token programName;
     private final Array<Var> vars = new Array<>();
     private final Array<Equation> equations = new Array<>();
+    private final Array<Token> defaults = new Array<>();
+    private final Array<Plot> plots = new Array<>();
     private Token method;
     private Token spanStart;
     private Token spanEnd;
@@ -66,6 +68,14 @@ public class Model {
         this.step = step;
     }
 
+    public Array<Token> getDefaults() {
+        return defaults;
+    }
+
+    public Array<Plot> getPlots() {
+        return plots;
+    }
+
     public String getSource() {
         return source;
     }
@@ -80,6 +90,8 @@ public class Model {
                 "programName=" + programName +
                 ", vars=" + vars +
                 ", equations=" + equations +
+                ", defaults=" + defaults +
+                ", plots=" + plots +
                 ", method=" + method +
                 ", spanStart=" + spanStart +
                 ", spanEnd=" + spanEnd +
