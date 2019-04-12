@@ -1,27 +1,37 @@
 package ru.maklas.model.logic.model;
 
+import com.badlogic.gdx.graphics.Color;
 import ru.maklas.model.logic.Token;
 
 public class Plot {
 
     Token functionName;
-    Token color;
+    Token colorToken;
+    Color color;
 
-    public Plot(Token functionName, Token color) {
+    public Plot(Token functionName, Token colorToken) {
         this.functionName = functionName;
-        this.color = color;
+        this.colorToken = colorToken;
     }
 
     public Token getFunctionName() {
         return functionName;
     }
 
-    public Token getColor() {
+    public Token getColorToken() {
+        return colorToken;
+    }
+
+    public Color getColor() {
         return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 
     @Override
     public String toString() {
-        return "{" + functionName + (color == null ? "" : ", color=" + color) + '}';
+        return "{" + functionName + (colorToken == null ? "" : ", color=" + colorToken) + '}';
     }
 }

@@ -10,6 +10,7 @@ public enum TokenType {
     bracket, // [ or ] or ( or )
     sign,
     comma,
+    expression,
     ;
 
 }

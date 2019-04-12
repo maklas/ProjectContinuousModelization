@@ -1,5 +1,7 @@
 package ru.maklas.model.logic;
 
+import ru.maklas.expression.ExpressionEvaluationException;
+
 public class EvaluationException extends Exception {
 
     Token token;
@@ -16,6 +18,11 @@ public class EvaluationException extends Exception {
 
     public EvaluationException(String message) {
         super(message);
+    }
+
+    public EvaluationException(ExpressionEvaluationException e, Token expressionToken) {
+        super("Failed to parse an expression", e);
+        this.token = expressionToken;
     }
 
     public Token getToken() {

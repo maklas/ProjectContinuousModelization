@@ -1,16 +1,40 @@
 package ru.maklas.model.logic.model;
 
 import com.badlogic.gdx.utils.Array;
+import ru.maklas.expression.Expression;
 import ru.maklas.model.logic.Token;
+import ru.maklas.model.logic.TokenType;
 
 public class Equation {
 
     Token name;
     Array<Token> expression;
+    Expression compiledExpression;
 
     public Equation(Token name, Array<Token> expression) {
         this.name = name;
         this.expression = expression;
+    }
+
+
+    public Token getName() {
+        return name;
+    }
+
+    public Array<Token> getExpression() {
+        return expression;
+    }
+
+    public Token getExpressionAsToken() {
+        return new Token(TokenType.expression, name.getLine(), name.getLineNumber(), expression.first().getStart(), expression.last().getEnd());
+    }
+
+    public Expression getCompiledExpression() {
+        return compiledExpression;
+    }
+
+    public void setCompiledExpression(Expression compiledExpression) {
+        this.compiledExpression = compiledExpression;
     }
 
     @Override
@@ -18,8 +42,8 @@ public class Equation {
         return "{" + name + "=" + expression.toString(" ") + '}';
     }
 
-    public String getFullEquation(String source){
+    public String getFullEquation(){
         if (expression == null || expression.size == 0) return "";
-        return source.substring(expression.first().getStart(), expression.last().getEnd());
+        return name.getLine().substring(expression.first().getStart(), expression.last().getEnd());
     }
 }

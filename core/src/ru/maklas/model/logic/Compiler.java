@@ -1,7 +1,11 @@
 package ru.maklas.model.logic;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.utils.Array;
 import org.apache.commons.lang3.StringUtils;
+import ru.maklas.expression.Expression;
+import ru.maklas.expression.ExpressionEvaluationException;
 import ru.maklas.model.logic.model.Equation;
 import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.logic.model.Plot;
@@ -13,10 +17,11 @@ import java.util.regex.Pattern;
 public class Compiler {
 
     private static final Pattern numberPattern = Pattern.compile("-?\\d+(\\.\\d+)?");
-    private static final Pattern wordPattern = Pattern.compile("[a-zA-Z_]\\w*");
+    private static final Pattern wordPattern = Pattern.compile("[#a-zA-Z_]\\w*");
     private static final Pattern tokenizingPattern = Pattern.compile(wordPattern.pattern() + "|" + numberPattern.pattern() + "|\\[|]|;|\\*|/|\\+|-|=|,|\\(|\\)|\\^");
     private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\s\\w\\-+.*/^,()\\\\_;=\\[]]");
     private static final Array<String> headers = Array.with("program", "var", "equations", "params");
+    private static final Array<String> methods = Array.with("euler");
 
     public static Model compile(String text) throws EvaluationException {
         Array<Token> tokens = tokenize(text);
@@ -57,7 +62,140 @@ public class Compiler {
     }
 
     private static void validateModel(Model model) throws EvaluationException {
-        //TODO
+        Array<Var> vars = model.getVars();
+        for (int i = 0; i < vars.size; i++) {
+            for (int j = 0; j < i; j++) {
+                if (vars.get(i).getName().getTextValue().equals(vars.get(j).getName().getTextValue())){
+                    throw new EvaluationException("Variable with name '" + vars.get(i).getName().getTextValue() + "' was already declared", vars.get(i).getName());
+                }
+            }
+        }
+
+        Array<Equation> equations = model.getEquations();
+        if (equations.isEmpty()) throw new EvaluationException("No equations defined");
+        for (int i = 0; i < equations.size; i++) {
+            for (int j = 0; j < i; j++) {
+                if (equations.get(i).getName().getTextValue().equals(equations.get(j).getName().getTextValue())){
+                    throw new EvaluationException("Equation with name '" + equations.get(i).getName().getTextValue() + "' was already declared", equations.get(i).getName());
+                }
+            }
+        }
+
+        for (Equation equation : equations) {
+            Token expressionToken = equation.getExpressionAsToken();
+            String expressionString = expressionToken.getTextValue();
+            Expression expression;
+            try {
+                expression = ru.maklas.expression.Compiler.compile(expressionString);
+            } catch (ExpressionEvaluationException e) {
+                throw new EvaluationException(e, expressionToken);
+            }
+            equation.setCompiledExpression(expression);
+        }
+
+        for (Equation equation : equations) {
+            Array<String> variables = equation.getCompiledExpression().variables();
+            for (String variable : variables) {
+                boolean found = false;
+                for (int i = 0; i < equations.size; i++) {
+                    if (variable.equals(equations.get(i).getName().getTextValue())){
+                        found = true;
+                        break;
+                    }
+                }
+                for (Var var : vars) {
+                    if (variable.equals(var.getName().getTextValue())){
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found){
+                    throw new EvaluationException("Undefined variable or equation '" + variable + "'", equation.getExpressionAsToken());
+                }
+            }
+        }
+
+        //MODEL
+        if (model.getMethod() == null){
+            throw new EvaluationException("Method is not defined. Specify method in params");
+        }
+        if (!methods.contains(model.getMethod().getTextValue(), false)){
+            throw new EvaluationException("Undefined method. Valid methods are: " + methods.toString(", "), model.getMethod());
+        }
+        //SPAN
+        if (model.getSpanStart() == null || model.getSpanEnd() == null){
+            throw new EvaluationException("Span not defined. Specify span in params");
+        }
+        double spanStart;
+        double spanEnd;
+        try {
+            spanStart = model.getSpanStart().getAsDouble();
+        } catch (Exception e) {
+            throw new EvaluationException("Invalid span start", model.getSpanStart());
+        }
+        try {
+            spanEnd = model.getSpanEnd().getAsDouble();
+        } catch (Exception e) {
+            throw new EvaluationException("Invalid span end", model.getSpanStart());
+        }
+        if (spanEnd <= spanStart){
+            throw new EvaluationException("Span end should never be less than span start", model.getSpanEnd());
+        }
+        if (model.getStep() == null){
+            throw new EvaluationException("Step not defined. Specify step in params");
+        }
+        //STEP
+        double step;
+        try {
+            step = model.getStep().getAsDouble();
+        } catch (Exception e) {
+            throw new EvaluationException("Invalid step", model.getStep());
+        }
+        if (step <= 0){
+            throw new EvaluationException("Step must be positive number", model.getStep());
+        }
+        if (spanEnd - spanStart < step){
+            throw new EvaluationException("Span must be bigger than steo");
+        }
+        //DEFAULTS
+        if (model.getDefaults().size == 0){
+            throw new EvaluationException("x0 initial values are not set");
+        }
+        if (model.getDefaults().size != model.getEquations().size){
+            throw new EvaluationException("x0 initial values != equation declarations");
+        }
+        if (model.getPlots().isEmpty()){
+            throw new EvaluationException("Plots are not defined. Specify plots in params");
+        }
+        //PLOTS
+        for (Plot plot : model.getPlots()) {
+            boolean found = false;
+            for (Equation equation : equations) {
+                if (equation.getName().getTextValue().equals(plot.getFunctionName().getTextValue())){
+                    found = true;
+                }
+            }
+            if (!found){
+                throw new EvaluationException("Function not found", plot.getFunctionName());
+            }
+
+            Token colorToken = plot.getColorToken();
+            if (colorToken.getTextValue().matches("#[0-9a-fA-F]{6}")){
+                String red = colorToken.getTextValue().substring(1, 3);
+                String green = colorToken.getTextValue().substring(3, 5);
+                String blue = colorToken.getTextValue().substring(5, 7);
+                plot.setColor(new Color(Integer.parseInt(red, 16)/ 256f, Integer.parseInt(green, 16)/ 256f, Integer.parseInt(blue, 16)/ 256f, 1));
+            } else {
+                Color color = Colors.get(colorToken.getTextValue());
+                if (color == null){
+                    throw new EvaluationException("Unknown color", colorToken);
+                }
+                plot.setColor(color);
+            }
+        }
+
+
     }
 
     private static void parseHeader(Token header, Array<Token> tokens, int start, int end, Model model) throws EvaluationException {
@@ -328,9 +466,9 @@ public class Compiler {
                     type = TokenType.comma;
                     break;
                 default:
-                    if (group.matches("-?\\d+(\\.\\d+)?")){
+                    if (numberPattern.matcher(group).matches()){
                         type = TokenType.number;
-                    } else if (group.matches("[a-zA-Z]\\w*")){
+                    } else if (wordPattern.matcher(group).matches()){
                         if (headers.contains(group.toLowerCase(), false)){
                             type = TokenType.header;
                         } else {
