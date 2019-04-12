@@ -12,10 +12,9 @@ import ru.maklas.expression.Expression;
 import ru.maklas.expression.ExpressionEvaluationException;
 import ru.maklas.model.assets.A;
 import ru.maklas.model.assets.Asset;
-import ru.maklas.model.functions.CustomExpressionFunction;
-import ru.maklas.model.functions.FunctionUtils;
 import ru.maklas.model.logic.Compiler;
 import ru.maklas.model.logic.EvaluationException;
+import ru.maklas.model.logic.methods.Euler;
 import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.mnw.MNW;
 import ru.maklas.model.utils.Utils;
@@ -118,6 +117,12 @@ public class MainMenuState extends State {
         try {
             Model model = Compiler.compile(text);
             this.text = String.valueOf(model);
+            try {
+                Array<Array<Vector2>> points = new Euler().solve(model);
+                pushState(new FunctionGraphState(new Array<>(), points));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } catch (EvaluationException e) {
             this.text = ExceptionUtils.getStackTrace(e);
         }

@@ -62,6 +62,7 @@ public class Compiler {
     }
 
     private static void validateModel(Model model) throws EvaluationException {
+        //VARS
         Array<Var> vars = model.getVars();
         for (int i = 0; i < vars.size; i++) {
             for (int j = 0; j < i; j++) {
@@ -71,6 +72,15 @@ public class Compiler {
             }
         }
 
+        for (Var var : vars) {
+            try {
+                var.getValue().getAsDouble();
+            } catch (Exception e) {
+                throw new EvaluationException("A variable value must be a number", var.getValue());
+            }
+        }
+
+        //EQUATIONS
         Array<Equation> equations = model.getEquations();
         if (equations.isEmpty()) throw new EvaluationException("No equations defined");
         for (int i = 0; i < equations.size; i++) {
@@ -115,6 +125,16 @@ public class Compiler {
                 }
             }
         }
+
+        for (Equation equation : equations) {
+            for (Var var : vars) {
+                if (var.getName().getTextValue().equals(equation.getName().getTextValue())){
+                    throw new EvaluationException("Equation has the same name as one of the variables", equation.getName());
+                }
+            }
+
+        }
+
 
         //MODEL
         if (model.getMethod() == null){
@@ -165,6 +185,14 @@ public class Compiler {
         if (model.getDefaults().size != model.getEquations().size){
             throw new EvaluationException("x0 initial values != equation declarations");
         }
+        for (Token aDefault : model.getDefaults()) {
+            try {
+                aDefault.getAsDouble();
+            } catch (Exception e) {
+                throw new EvaluationException("A default value must be a number", aDefault);
+            }
+        }
+
         if (model.getPlots().isEmpty()){
             throw new EvaluationException("Plots are not defined. Specify plots in params");
         }

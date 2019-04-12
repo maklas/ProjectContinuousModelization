@@ -8,16 +8,16 @@ Var //Переменные
     S = 0.35 //площадь поперечного сечения снаряда
     g=9.81 //ускорение силы тяжести
 Equations
-    dxdt1 = dxdt3 * cos(dxdt4)
-    dxdt2 = dxdt3 * sin(dxdt4)
-    dxdt3 = -c * p * S * dxdt3^2/2*m - g * sin(dxdt4)
-    dxdt4 = -g * cos(dxdt4)/dxdt3
+    x = v * cos(th)
+    y = v * sin(th)
+    v = (-c * p * S * (v^2))/(2*m) - (g * sin(th))
+    th = (-g * cos(th))/v
 Params
     method = euler //Метод решения
-    span = [0, 50] //Интервал интегрирования
+    span = [0, 40] //Интервал интегрирования
     step = 0.1 //шаг интегрирования
     x0 = [0, 0, 655, 1.2] //Правило Коши
-    plot = [dxdt1(blue), dxdt2(red), dxdt3(#00FF00), dxdt4(yellow)] //График
+    plot = [x(BLUE), y(RED), v(#00FF00), th(YELLOW)] //График
 
 //1. Обработка:
 //   Удалить все пустые строчки и строчки состоящие из комментов
