@@ -22,14 +22,17 @@ public class Euler implements Method {
             environment.put(model.getEquations().get(i).getName().getTextValue(), model.getDefaults().get(i).getAsDouble());
         }
 
+        String xName = environment.keys().toArray().contains("x", false) ? "t" : "x";
 
         Array<EulerFun> eulers = model.getEquations().map(e -> new EulerFun(e.getName().getTextValue(), e.getCompiledExpression()));
 
         double x = model.getSpanStart().getAsDouble();
+        environment.put(xName, x);
         double step = model.getStep().getAsDouble();
         int iterations = (int) Math.ceil((model.getSpanEnd().getAsDouble() - model.getSpanStart().getAsDouble()) / step);
         for (int i = 0; i < iterations; i++) {
             x += step;
+            environment.put(xName, x);
             for (EulerFun euler : eulers) {
                 double t = euler.expression.evaluate(environment);
                 Double val = environment.get(euler.name);

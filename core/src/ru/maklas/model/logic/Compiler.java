@@ -106,6 +106,7 @@ public class Compiler {
         for (Equation equation : equations) {
             Array<String> variables = equation.getCompiledExpression().variables();
             for (String variable : variables) {
+                if (variable.equals("x")) continue;
                 boolean found = false;
                 for (int i = 0; i < equations.size; i++) {
                     if (variable.equals(equations.get(i).getName().getTextValue())){
@@ -209,7 +210,9 @@ public class Compiler {
             }
 
             Token colorToken = plot.getColorToken();
-            if (colorToken.getTextValue().matches("#[0-9a-fA-F]{6}")){
+            if (colorToken == null){
+                plot.setColor(Color.BLACK);
+            } else if (colorToken.getTextValue().matches("#[0-9a-fA-F]{6}")){
                 String red = colorToken.getTextValue().substring(1, 3);
                 String green = colorToken.getTextValue().substring(3, 5);
                 String blue = colorToken.getTextValue().substring(5, 7);
