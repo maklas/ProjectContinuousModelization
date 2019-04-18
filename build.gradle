@@ -115,7 +115,7 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.github.maklas:MEngine:$mengineVersion"
         compile "com.github.maklas:MLibs:$mLibsVersion"
-        compile "com.github.maklas:MExpression:$mExpressionVersion"
+        compile "org.mariuszgromada.math:MathParser.org-mXparser:4.3.3"
         compile "com.kotcrab.vis:vis-ui:$visuiVersion"
         compile "org.apache.commons:commons-lang3:3.8.1"
         compile "com.fifesoft:rsyntaxtextarea:3.0.2"

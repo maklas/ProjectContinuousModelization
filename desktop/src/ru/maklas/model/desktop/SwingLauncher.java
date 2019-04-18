@@ -1,13 +1,6 @@
 package ru.maklas.model.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglAWTCanvas;
-import com.badlogic.gdx.utils.ObjectMap;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.RTextScrollPane;
-import ru.maklas.expression.Compiler;
-import ru.maklas.expression.Expression;
-import ru.maklas.expression.ExpressionEvaluationException;
-import ru.maklas.expression.ExpressionUtils;
 import ru.maklas.model.ProjectContinuousModelization;
 import ru.maklas.model.mnw.MNW;
 import ru.maklas.model.states.MainMenuState;

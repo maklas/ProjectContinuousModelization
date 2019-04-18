@@ -1,52 +1,47 @@
 package ru.maklas.model.functions;
 
-import com.badlogic.gdx.utils.ObjectMap;
-import ru.maklas.expression.Compiler;
-import ru.maklas.expression.Expression;
-import ru.maklas.expression.ExpressionEvaluationException;
+import org.mariuszgromada.math.mxparser.Argument;
+import org.mariuszgromada.math.mxparser.Expression;
+import ru.maklas.model.utils.StringUtils;
+
+import java.util.Arrays;
 
 public class CustomExpressionFunction implements GraphFunction {
 
-    private final ObjectMap<String, Double> params = new ObjectMap<>();
     private Expression expression;
+    private Argument xArg = new Argument("x", 0);
 
     public CustomExpressionFunction() {
         this("");
     }
 
-    public CustomExpressionFunction(Expression expression) {
-        this.expression = expression;
+    public CustomExpressionFunction(String exp) {
+        this(new Expression(exp));
     }
 
-    public CustomExpressionFunction(String exp) {
-        try {
-            expression = Compiler.compile(exp);
-        } catch (ExpressionEvaluationException e) {
-            e.printStackTrace();
-        }
+    public CustomExpressionFunction(Expression expression) {
+        setExpression(expression);
     }
 
     @Override
     public double f(double x) {
         if (expression != null) {
-            params.put("x", x);
-            try {
-                return expression.evaluate(params);
-            } catch (Exception ignored) {
-                if (!(ignored instanceof ExpressionEvaluationException)) {
-                    System.err.println("Bad Expression: " + expression);
-                }
-
-            }
+            xArg.setArgumentValue(x);
+            return expression.calculate();
         }
         return 0;
     }
 
-    public void setExpression(Expression expression) throws ExpressionEvaluationException {
-        if (expression != null && (expression.variables().size >= 2 || (expression.variables().size == 1) && !expression.variables().contains("x", false))){
-            throw new ExpressionEvaluationException("Can only have 1 variable X");
-        }
+    public void setExpression(Expression expression) {
         this.expression = expression;
+        this.expression.addArguments(xArg);
+        expression.checkSyntax();
+        if (!StringUtils.isEmpty(expression.getErrorMessage())){
+            System.err.println(expression.getErrorMessage());
+        }
+        if (expression.getMissingUserDefinedArguments().length > 0){
+            System.err.println("Missing argumets: " + Arrays.toString(expression.getMissingUserDefinedArguments()));
+        }
     }
 
     public Expression getExpression() {

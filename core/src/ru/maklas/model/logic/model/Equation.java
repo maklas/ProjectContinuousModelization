@@ -1,7 +1,7 @@
 package ru.maklas.model.logic.model;
 
 import com.badlogic.gdx.utils.Array;
-import ru.maklas.expression.Expression;
+import org.mariuszgromada.math.mxparser.Expression;
 import ru.maklas.model.logic.Token;
 import ru.maklas.model.logic.TokenType;
 

@@ -6,10 +6,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ObjectMap;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import ru.maklas.expression.Expression;
-import ru.maklas.expression.ExpressionEvaluationException;
+import org.mariuszgromada.math.mxparser.Argument;
+import org.mariuszgromada.math.mxparser.Expression;
 import ru.maklas.model.assets.A;
 import ru.maklas.model.assets.Asset;
 import ru.maklas.model.logic.Compiler;
@@ -36,52 +35,50 @@ public class MainMenuState extends State {
             Array<Vector2> points2 = new Array<>();
             Array<Vector2> points3 = new Array<>();
             Array<Vector2> points4 = new Array<>();
-            Expression e1 = ru.maklas.expression.Compiler.compile("v * cos(th)");
-            Expression e2 = ru.maklas.expression.Compiler.compile("v * sin(th)");
-            Expression e3 = ru.maklas.expression.Compiler.compile("((-0.067725 * v^2) / 87.02) - (g * sin(v))");
-            Expression e4 = ru.maklas.expression.Compiler.compile("(-1 * (g * cos(th))) / v");
+            Expression e1 = new Expression("v * cos(th)");
+            Expression e2 = new Expression("v * sin(th)");
+            Expression e3 = new Expression("((-0.067725 * v^2) / 87.02) - (g * sin(v))");
+            Expression e4 = new Expression("(-1 * (g * cos(th))) / v");
 
-            ObjectMap<String, Double> parameters = new ObjectMap<>();
-            parameters.put("g", 9.81d);
-            parameters.put("m", 43.51);
+            Argument g = new Argument("g", 9.81d);
+            Argument m = new Argument("m", 43.51);
+            Argument v = new Argument("v", 755);
+            Argument th = new Argument("th", 7);
+            e1.addArguments(g, m, v, th);
+            e2.addArguments(g, m, v, th);
+            e3.addArguments(g, m, v, th);
+            e4.addArguments(g, m, v, th);
 
             double min = 0;
             double max = 40;
-            double step = 0.0001;
+            double step = 0.01;
             long iterations = (long) Math.ceil((max - min) / step);
-            double v = 755;
-            double th = 1;
             double _x = 0;
             double y = 0;
 
             double x = min;
 
             for (int i = 0; i <= iterations; i++) {
-                parameters.put("v", v);
-                parameters.put("th", th);
                 points1.add(new Vector2((float) x, (float) _x));
                 points2.add(new Vector2((float) x, (float) y));
-                points3.add(new Vector2((float) x, (float) v));
-                points4.add(new Vector2((float) x, (float) th));
+                points3.add(new Vector2((float) x, (float) v.getArgumentValue()));
+                points4.add(new Vector2((float) x, (float) th.getArgumentValue()));
 
                 x += step;
-                double t1 = e1.evaluate(parameters);
+                double t1 = e1.calculate();
                 _x += t1 * step;
-                double t2 = e2.evaluate(parameters);
+                double t2 = e2.calculate();
                 y += t2 * step;
-                double t3 = e3.evaluate(parameters);
-                v += t3 * step;
-                double t4 = e4.evaluate(parameters);
-                th += t4 * step;
+                double t3 = e3.calculate();
+                v.setArgumentValue(v.getArgumentValue() + t3 * step);
+                double t4 = e4.calculate();
+                th.setArgumentValue(th.getArgumentValue() + t4 * step);
             }
 
-
-            //pushState(new FunctionGraphState(new Array<>(), Array.with(points1, points2, points3, points4)));
-        } catch (ExpressionEvaluationException e1) {
-            e1.printStackTrace();
+            pushState(new FunctionGraphState(new Array<>(), Array.with(points1, points2, points3, points4)));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-
     }
 
     @Override

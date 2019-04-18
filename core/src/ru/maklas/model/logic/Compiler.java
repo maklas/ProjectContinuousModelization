@@ -4,8 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.utils.Array;
 import org.apache.commons.lang3.StringUtils;
-import ru.maklas.expression.Expression;
-import ru.maklas.expression.ExpressionEvaluationException;
+import org.mariuszgromada.math.mxparser.Expression;
 import ru.maklas.model.logic.model.Equation;
 import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.logic.model.Plot;
@@ -95,16 +94,17 @@ public class Compiler {
             Token expressionToken = equation.getExpressionAsToken();
             String expressionString = expressionToken.getTextValue();
             Expression expression;
-            try {
-                expression = ru.maklas.expression.Compiler.compile(expressionString);
-            } catch (ExpressionEvaluationException e) {
-                throw new EvaluationException(e, expressionToken);
+            expression = new Expression(expressionString);
+            if (!expression.checkLexSyntax()){
+                System.err.println(expression.getErrorMessage());
+                throw new EvaluationException("Syntax error", expressionToken);
             }
+
             equation.setCompiledExpression(expression);
         }
 
         for (Equation equation : equations) {
-            Array<String> variables = equation.getCompiledExpression().variables();
+            String[] variables = equation.getCompiledExpression().getMissingUserDefinedArguments();
             for (String variable : variables) {
                 if (variable.equals("x")) continue;
                 boolean found = false;

@@ -7,9 +7,7 @@ import com.badlogic.gdx.utils.Consumer;
 import com.badlogic.gdx.utils.MapFunction;
 import com.kotcrab.vis.ui.util.Validators;
 import com.kotcrab.vis.ui.widget.*;
-import ru.maklas.expression.Compiler;
-import ru.maklas.expression.Expression;
-import ru.maklas.expression.ExpressionEvaluationException;
+import org.mariuszgromada.math.mxparser.Expression;
 import ru.maklas.model.functions.*;
 import ru.maklas.model.utils.persistance.BiConsumer;
 
@@ -84,13 +82,10 @@ public class FunctionSelectionView extends BaseStage {
         FunctionDefenition<CustomExpressionFunction> customExpressionDefenition = new FunctionDefenition<>("CustomExpression", new CustomExpressionFunction("x"));
         functionDefenitions.add(customExpressionDefenition
                 .addStringParam("Expression", "x", (f, e) -> {
-                    try {
-                        Expression compile = Compiler.compile(e);
-                        f.setExpression(compile);
-                        customExpressionDefenition.paramTable.getField("Expression").getStyle().fontColor = Color.WHITE;
-                    } catch (ExpressionEvaluationException ignore) {
-                        customExpressionDefenition.paramTable.getField("Expression").getStyle().fontColor = Color.RED;
-                    }
+
+                    Expression exp = new Expression(e);
+                    f.setExpression(exp);
+                    customExpressionDefenition.paramTable.getField("Expression").getStyle().fontColor = exp.checkSyntax() ?  Color.WHITE : Color.RED;
                 }, f -> {
                     Expression exp = f.getExpression();
                     return exp == null ? "" : exp.toString();
