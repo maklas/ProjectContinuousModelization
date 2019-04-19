@@ -19,7 +19,7 @@ public class Euler implements Method {
         }
         //2. Saving Defauts as vars
         for (int i = 0; i < model.getEquations().size; i++) {
-            String name = model.getEquations().get(i).getName().getTextValue();
+            String name = model.getEquations().get(i).getPureEquationName();
             environment.put(name, new Argument(name, model.getDefaults().get(i).getAsDouble()));
         }
 
@@ -33,14 +33,18 @@ public class Euler implements Method {
         }
 
         Argument[] arguments = environment.values().toArray().toArray(Argument.class);
-        Array<EulerFun> eulers = model.getEquations().map(e -> new EulerFun(e.getName().getTextValue(), e.getCompiledExpression()));
+        Array<EulerFun> eulers = model.getEquations().map(e -> new EulerFun(e.getPureEquationName(), e.getCompiledExpression()));
         for (EulerFun euler : eulers) {
             euler.expression.removeAllArguments();
             euler.expression.addArguments(arguments);
         }
 
-
         double x = model.getSpanStart().getAsDouble();
+        for (EulerFun euler : eulers) {
+            euler.add(x, environment.get(euler.name).getArgumentValue());
+        }
+
+
         xArg.setArgumentValue(x);
         double step = model.getStep().getAsDouble();
         int iterations = (int) Math.ceil((model.getSpanEnd().getAsDouble() - model.getSpanStart().getAsDouble()) / step);

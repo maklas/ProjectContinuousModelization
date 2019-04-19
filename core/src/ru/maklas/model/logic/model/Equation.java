@@ -21,6 +21,10 @@ public class Equation {
         return name;
     }
 
+    public String getPureEquationName(){
+        return name.getTextValue().substring(0, name.getTextValue().length() - 1);
+    }
+
     public Array<Token> getExpression() {
         return expression;
     }

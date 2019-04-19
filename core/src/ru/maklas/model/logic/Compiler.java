@@ -16,9 +16,9 @@ import java.util.regex.Pattern;
 public class Compiler {
 
     private static final Pattern numberPattern = Pattern.compile("-?\\d+(\\.\\d+)?");
-    private static final Pattern wordPattern = Pattern.compile("[#a-zA-Z_]\\w*");
+    private static final Pattern wordPattern = Pattern.compile("[#a-zA-Z_]\\w*'?");
     private static final Pattern tokenizingPattern = Pattern.compile(wordPattern.pattern() + "|" + numberPattern.pattern() + "|\\[|]|;|\\*|/|\\+|-|=|,|\\(|\\)|\\^");
-    private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\s\\w\\-+.*/^,()\\\\_;=\\[]]");
+    private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\s\\w\\-+.*/^',()\\\\_;=\\[]]");
     private static final Array<String> headers = Array.with("program", "var", "equations", "params");
     private static final Array<String> methods = Array.with("euler");
 
@@ -84,7 +84,7 @@ public class Compiler {
         if (equations.isEmpty()) throw new EvaluationException("No equations defined");
         for (int i = 0; i < equations.size; i++) {
             for (int j = 0; j < i; j++) {
-                if (equations.get(i).getName().getTextValue().equals(equations.get(j).getName().getTextValue())){
+                if (equations.get(i).getPureEquationName().equals(equations.get(j).getPureEquationName())){
                     throw new EvaluationException("Equation with name '" + equations.get(i).getName().getTextValue() + "' was already declared", equations.get(i).getName());
                 }
             }
@@ -109,7 +109,7 @@ public class Compiler {
                 if (variable.equals("x")) continue;
                 boolean found = false;
                 for (int i = 0; i < equations.size; i++) {
-                    if (variable.equals(equations.get(i).getName().getTextValue())){
+                    if (variable.equals(equations.get(i).getPureEquationName())){
                         found = true;
                         break;
                     }
@@ -129,7 +129,7 @@ public class Compiler {
 
         for (Equation equation : equations) {
             for (Var var : vars) {
-                if (var.getName().getTextValue().equals(equation.getName().getTextValue())){
+                if (var.getName().getTextValue().equals(equation.getPureEquationName())){
                     throw new EvaluationException("Equation has the same name as one of the variables", equation.getName());
                 }
             }
@@ -201,7 +201,7 @@ public class Compiler {
         for (Plot plot : model.getPlots()) {
             boolean found = false;
             for (Equation equation : equations) {
-                if (equation.getName().getTextValue().equals(plot.getFunctionName().getTextValue())){
+                if (equation.getPureEquationName().equals(plot.getFunctionName().getTextValue()) || equation.getName().getTextValue().equals(plot.getFunctionName().getTextValue())){
                     found = true;
                 }
             }
@@ -282,6 +282,8 @@ public class Compiler {
                     name = token;
                     if (name.getType() != TokenType.word){
                         throw new EvaluationException("Expected equation name.", token);
+                    } else if (!name.getTextValue().endsWith("'")){
+                        throw new EvaluationException("Equation must be differential. Add ' at the end of the name", token);
                     }
                 } else if (expression == null){
                     if (token.getType() == TokenType.equals){
