@@ -451,6 +451,7 @@ public class Compiler {
         if (code == null) return null;
         String[] lines = code.split("\r?\n");
 
+        int globalOffset = 0;
         Array<Token> tokens = new Array<>();
         for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
             String line = lines[lineIndex];
@@ -463,13 +464,14 @@ public class Compiler {
             if (matcher.find()){
                 throw new EvaluationException("Invalid symbol at line " + (lineIndex + 1) + ", col " + matcher.start() +": '" + matcher.group() + "'");
             }
-            tokenize(line, lineIndex + 1, tokens);
+            tokenize(line, globalOffset, lineIndex + 1, tokens);
+            globalOffset += lines[lineIndex].length() + 1;
         }
         return tokens;
     }
 
     /** Parse and add tokens**/
-    private static void tokenize(String line, int lineNumber, Array<Token> tokens) throws EvaluationException {
+    private static void tokenize(String line, int globalOffset, int lineNumber, Array<Token> tokens) throws EvaluationException {
         Matcher matcher = tokenizingPattern.matcher(line);
 
         while (matcher.find()){
@@ -515,12 +517,12 @@ public class Compiler {
                 throw EvaluationException.invalidTokenException(group);
             }
             if (type == TokenType.end && tokens.size > 0 && tokens.last().getType() == TokenType.end) continue;
-            Token token = new Token(type, line, lineNumber, matcher.start(), matcher.end());
+            Token token = new Token(type, globalOffset, line, lineNumber, matcher.start(), matcher.end());
 
             tokens.add(token);
         }
         if (tokens.size > 0 && tokens.last().getType() != TokenType.end)
-        tokens.add(new Token(TokenType.end, line, lineNumber, line.length() - 1, line.length() - 1));
+        tokens.add(new Token(TokenType.end, globalOffset, line, lineNumber, line.length() - 1, line.length() - 1));
     }
 
 }

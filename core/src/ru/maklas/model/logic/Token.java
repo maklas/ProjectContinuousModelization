@@ -3,14 +3,16 @@ package ru.maklas.model.logic;
 public class Token {
 
     private final TokenType type;
+    private final int globalOffset; //Offset of the line
     private final String line;
     private final int lineNumber;
     private final int start;
     private final int end;
     private String valueCache = null;
 
-    public Token(TokenType type, String line, int lineNumber, int start, int end) {
+    public Token(TokenType type, int globalOffset, String line, int lineNumber, int start, int end) {
         this.type = type;
+        this.globalOffset = globalOffset;
         this.line = line;
         this.lineNumber = lineNumber;
         this.start = start;
@@ -69,5 +71,9 @@ public class Token {
 
     public String position(){
         return "line " + lineNumber + ", column " + start;
+    }
+
+    public int getGlobalOffset() {
+        return globalOffset;
     }
 }

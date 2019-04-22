@@ -41,6 +41,7 @@ public class SwingLauncher extends JFrame {
         menu.add(item);
         setJMenuBar(menu);
         item.addActionListener((e) -> {
+            inputComponent.clearErrors();
             String text = inputComponent.getText();
             Model model;
             try {
@@ -51,6 +52,10 @@ public class SwingLauncher extends JFrame {
             } catch (Exception exception) {
                 if (exception instanceof EvaluationException){
                     //TODO print
+                    Token token = ((EvaluationException) exception).getToken();
+                    if (token != null) {
+                        inputComponent.highlightError(token);
+                    }
                 } else {
                     System.err.println("Unexpected Exception!!!!");
                     //TODO print too
