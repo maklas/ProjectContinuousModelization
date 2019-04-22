@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglAWTCanvas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import javafx.scene.layout.Pane;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import ru.maklas.mengine.Entity;
 import ru.maklas.model.ProjectContinuousModelization;
 import ru.maklas.model.engine.M;
@@ -31,8 +33,16 @@ public class SwingLauncher extends JFrame {
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
         TextInputComponent inputComponent = new TextInputComponent();
+        JTextArea errorTextArea = new JTextArea();
+        errorTextArea.setEnabled(false);
+        errorTextArea.setDisabledTextColor(Color.RED);
+        JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+
+        leftSplit.setTopComponent(inputComponent);
+        leftSplit.setBottomComponent(errorTextArea);
+
         Container libgdxComponent = createLibgdxComponent();
-        split.setLeftComponent(inputComponent);
+        split.setLeftComponent(leftSplit);
         split.setRightComponent(libgdxComponent);
         setContentPane(split);
 
@@ -42,6 +52,7 @@ public class SwingLauncher extends JFrame {
         setJMenuBar(menu);
         item.addActionListener((e) -> {
             inputComponent.clearErrors();
+            errorTextArea.setText("");
             String text = inputComponent.getText();
             Model model;
             try {
@@ -49,16 +60,19 @@ public class SwingLauncher extends JFrame {
                 Array<Entity> entities = convertToEntities(model);
                 Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, null, null))));
                 SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
+                errorTextArea.setText("Compiled successfully!");
+                errorTextArea.setDisabledTextColor(new Color(0, 0.65f, 0));
             } catch (Exception exception) {
                 if (exception instanceof EvaluationException){
-                    //TODO print
+                    errorTextArea.setText(exception.getMessage());
+                    errorTextArea.setDisabledTextColor(Color.RED);
                     Token token = ((EvaluationException) exception).getToken();
                     if (token != null) {
                         inputComponent.highlightError(token);
                     }
                 } else {
                     System.err.println("Unexpected Exception!!!!");
-                    //TODO print too
+                    errorTextArea.setText(ExceptionUtils.getStackTrace(exception));
                 }
                 exception.printStackTrace();
             }
@@ -67,7 +81,10 @@ public class SwingLauncher extends JFrame {
         pack();
         setVisible(true);
         setSize(1000, 600);
-        SwingUtilities.invokeLater(() -> split.setDividerLocation(JSplitPane.CENTER_ALIGNMENT));
+        SwingUtilities.invokeLater(() -> {
+            split.setDividerLocation(JSplitPane.CENTER_ALIGNMENT);
+            leftSplit.setDividerLocation(0.8);
+        });
     }
 
     private static Array<Entity> convertToEntities(Model model) throws Exception {

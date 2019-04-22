@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Colors;
 import com.badlogic.gdx.utils.Array;
 import org.apache.commons.lang3.StringUtils;
 import org.mariuszgromada.math.mxparser.Expression;
+import ru.maklas.model.functions.FunctionUtils;
 import ru.maklas.model.logic.model.Equation;
 import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.logic.model.Plot;
@@ -198,7 +199,8 @@ public class Compiler {
             throw new EvaluationException("Plots are not defined. Specify plots in params");
         }
         //PLOTS
-        for (Plot plot : model.getPlots()) {
+        for (int i = 0; i < model.getPlots().size; i++) {
+            Plot plot = model.getPlots().get(i);
             boolean found = false;
             for (Equation equation : equations) {
                 if (equation.getPureEquationName().equals(plot.getFunctionName().getTextValue()) || equation.getName().getTextValue().equals(plot.getFunctionName().getTextValue())){
@@ -211,7 +213,7 @@ public class Compiler {
 
             Token colorToken = plot.getColorToken();
             if (colorToken == null){
-                plot.setColor(Color.BLACK);
+                plot.setColor(FunctionUtils.goodFunctionColor(i));
             } else if (colorToken.getTextValue().matches("#[0-9a-fA-F]{6}")){
                 String red = colorToken.getTextValue().substring(1, 3);
                 String green = colorToken.getTextValue().substring(3, 5);

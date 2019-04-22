@@ -8,10 +8,10 @@ Var //Переменные
     S = 0.35 //площадь поперечного сечения снаряда
     g=9.81 //ускорение силы тяжести
 Equations
-    x = v * cos(th)
-    y = v * sin(th)
-    v = (-c * p * S * (v^2))/(2*m) - (g * sin(th))
-    th = (-g * cos(th))/v
+    x' = v * cos(th)
+    y' = v * sin(th)
+    v' = (-c * p * S * (v^2))/(2*m) - (g * sin(th))
+    th' = (-g * cos(th))/v
 Params
     method = euler //Метод решения
     span = [0, 40] //Интервал интегрирования
