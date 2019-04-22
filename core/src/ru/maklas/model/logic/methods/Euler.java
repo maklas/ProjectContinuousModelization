@@ -29,7 +29,8 @@ public class Euler implements Method {
             xArg = new Argument("t", 0);
             environment.put("t", xArg);
         } else {
-            xArg = environment.get("x");
+            xArg = new Argument("x", 0);
+            environment.put("x", xArg);
         }
 
         Argument[] arguments = environment.values().toArray().toArray(Argument.class);

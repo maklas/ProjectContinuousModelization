@@ -104,6 +104,7 @@ public class SwingLauncher extends JFrame {
                     Entity e = new Entity();
                     FunctionFromPoints f = new FunctionFromPoints(functions.get(i));
                     FunctionComponent fc = new FunctionComponent(f);
+                    fc.lineWidth = 2f;
                     fc.color = plot.getColor();
                     fc.name = plot.getFunctionName().getTextValue();
                     e.add(fc);
