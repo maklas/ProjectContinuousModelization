@@ -31,7 +31,7 @@ public class SwingLauncher extends JFrame {
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
         TextInputComponent inputComponent = new TextInputComponent();
-        Component libgdxComponent = createLibgdxComponent();
+        Container libgdxComponent = createLibgdxComponent();
         split.setLeftComponent(inputComponent);
         split.setRightComponent(libgdxComponent);
         setContentPane(split);
@@ -47,6 +47,7 @@ public class SwingLauncher extends JFrame {
                 model = Compiler.compile(text);
                 Array<Entity> entities = convertToEntities(model);
                 Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, null, null))));
+                SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
             } catch (Exception exception) {
                 if (exception instanceof EvaluationException){
                     //TODO print
@@ -115,7 +116,7 @@ public class SwingLauncher extends JFrame {
     }
 
 
-    private static Component createLibgdxComponent(){
+    private static Container createLibgdxComponent(){
         LwjglAWTCanvas canvas = new LwjglAWTCanvas(new ProjectContinuousModelization());
         Container container = new Container();
         container.setLayout(new BorderLayout());

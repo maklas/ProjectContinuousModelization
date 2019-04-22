@@ -6,5 +6,5 @@ Params
     method = euler
     span = [0, 10]
     step = 0.1
-    x0 = [3, 0]
+    x0 = [1.5, 0]
     plot = [x'(BLUE), y'(RED)]
