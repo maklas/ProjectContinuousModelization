@@ -21,21 +21,20 @@ import ru.maklas.model.engine.formulas.FunctionComponent;
 import ru.maklas.model.engine.input.EngineInputAdapter;
 import ru.maklas.model.engine.other.EntityDebugSystem;
 import ru.maklas.model.engine.other.TTLSystem;
-import ru.maklas.model.engine.rendering.CameraMode;
-import ru.maklas.model.engine.rendering.CameraSystem;
-import ru.maklas.model.engine.rendering.FunctionRenderSystem;
-import ru.maklas.model.engine.rendering.FunctionTrackingRenderSystem;
+import ru.maklas.model.engine.rendering.*;
 import ru.maklas.model.functions.FunctionUtils;
 import ru.maklas.model.functions.GraphFunction;
 
 public class FunctionGraphState extends AbstractEngineState {
 
+    private final Array<Entity> entitiesToAdd;
     private final Array<GraphFunction> functions;
     private final Array<Array<Vector2>> pointFunctions;
     private OrthographicCamera cam;
     private ShapeRenderer sr;
 
-    public FunctionGraphState(Array<GraphFunction> functions, Array<Array<Vector2>> pointFunctions) {
+    public FunctionGraphState(Array<Entity> entities, Array<GraphFunction> functions, Array<Array<Vector2>> pointFunctions) {
+        this.entitiesToAdd = entities;
         this.functions = functions;
         this.pointFunctions = pointFunctions;
     }
@@ -59,9 +58,19 @@ public class FunctionGraphState extends AbstractEngineState {
     @Override
     protected void addSystems(Engine engine) {
         engine.add(new CameraSystem());
-        engine.add(new FunctionTrackingRenderSystem().setEnableTracking(true).setPrintXY(true));
+        engine.add(new FunctionTrackingRenderSystem()
+                .setEnableTracking(true)
+                .setPrintXY(true)
+                .setPrintFunctionNames(true));
         engine.add(new EntityDebugSystem().setTextInfoEnabled(false).setZoomAtMouse(true));
-        engine.add(new FunctionRenderSystem().setDrawFunctions(true).setDrawNet(true).setDrawPortions(true).setFillNet(false).setNetColor(Color.BLACK).setNumberColor(Color.BLACK));
+        engine.add(new FunctionRenderSystem()
+                .setDrawFunctions(true)
+                .setDrawNet(false)
+                .setDrawAxis(true)
+                .setAxisColor(Color.BLACK)
+                .setNetColor(Color.BLACK)
+                .setNumberColor(Color.BLACK));
+        engine.add(new CrossPointRenderSystem());
         engine.add(new UpdatableEntitySystem());
         engine.add(new TTLSystem());
     }
@@ -73,12 +82,18 @@ public class FunctionGraphState extends AbstractEngineState {
 
     @Override
     protected void start() {
-        for (int i = 0; i < functions.size; i++) {
-            FunctionComponent fc = new FunctionComponent(functions.get(i));
-            fc.color = FunctionUtils.goodFunctionColor(i);
-            fc.lineWidth = 2f;
-            engine.add(new Entity().add(fc));
+        if (functions != null) {
+            for (int i = 0; i < functions.size; i++) {
+                FunctionComponent fc = new FunctionComponent(functions.get(i));
+                fc.color = FunctionUtils.goodFunctionColor(i);
+                fc.lineWidth = 2f;
+                engine.add(new Entity().add(fc));
+            }
         }
+        if (entitiesToAdd != null) {
+            engine.addAll(entitiesToAdd);
+        }
+
     }
 
     @Override
@@ -107,12 +122,14 @@ public class FunctionGraphState extends AbstractEngineState {
         engine.render();
 
 
-        sr.begin(ShapeRenderer.ShapeType.Line);
-        for (int i = 0; i < pointFunctions.size; i++) {
-            sr.setColor(FunctionUtils.goodFunctionColor(i));
-            Array<Vector2> f = pointFunctions.get(i);
-            FunctionUtils.renderPoints(sr, f);
+        if (pointFunctions != null) {
+            sr.begin(ShapeRenderer.ShapeType.Line);
+            for (int i = 0; i < pointFunctions.size; i++) {
+                sr.setColor(FunctionUtils.goodFunctionColor(i));
+                Array<Vector2> f = pointFunctions.get(i);
+                FunctionUtils.renderPoints(sr, f);
+            }
+            sr.end();
         }
-        sr.end();
     }
 }

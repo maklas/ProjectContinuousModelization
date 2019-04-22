@@ -2,6 +2,7 @@ package ru.maklas.model.functions;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -51,6 +52,25 @@ public class FunctionUtils {
             Vector2 b = points.get(i);
             sr.line(a, b);
         }
+    }
+
+    public static Array<Vector2> findCrossPoints(Array<Vector2> f1, Array<Vector2> f2){
+        Array<Vector2> points = new Array<>();
+        Vector2 tempVec = new Vector2();
+
+        for (int i = 1; i < f1.size; i++) {
+            Vector2 x1 = f1.get(i - 1);
+            Vector2 x2 = f1.get(i);
+            for (int j = 1; j < f2.size; j++) {
+                Vector2 y1 = f2.get(j - 1);
+                Vector2 y2 = f2.get(j);
+                if (Intersector.intersectSegments(x1, x2, y1, y2, tempVec)){
+                    points.add(tempVec.cpy());
+                }
+            }
+        }
+
+        return points;
     }
 
     public static Array<Vector2> euler(GraphFunction f, float rangeStart, float rangeEnd, float step, float y0){

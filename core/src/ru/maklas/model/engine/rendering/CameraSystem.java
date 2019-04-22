@@ -25,6 +25,13 @@ public class CameraSystem extends EntitySystem {
 
     private ComponentMapper<CameraComponent> cameraM = M.camera;
     private ImmutableArray<Entity> cameras;
+    private static final long DOUBLE_PRESS_TIME = 300;
+    private long preLastShiftPress;
+    private long lastShiftPress;
+    private boolean shifting = false;
+    private boolean doubleShifting = false;
+    private long lastCtrlPress;
+    private boolean ctrling = false;
 
     @Override
     public void onAddedToEngine(Engine engine) {
@@ -76,7 +83,38 @@ public class CameraSystem extends EntitySystem {
                     } else {
                         speed = cc.controlSpeed;
                     }
-                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) speed *= 4;
+
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)){
+                        long now = System.currentTimeMillis();
+                        if (now - lastShiftPress < DOUBLE_PRESS_TIME){
+                            shifting = true;
+                            if (lastShiftPress - preLastShiftPress < DOUBLE_PRESS_TIME){
+                                doubleShifting = true;
+                            }
+                        }
+                        preLastShiftPress = lastShiftPress;
+                        lastShiftPress = now;
+                    }
+                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+                        speed *= doubleShifting ? 64 : shifting ? 16 : 4;
+                    } else {
+                        shifting = false;
+                        doubleShifting = false;
+                    }
+
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)){
+                        long now = System.currentTimeMillis();
+                        if (now - lastCtrlPress < DOUBLE_PRESS_TIME){
+                            ctrling = true;
+                        }
+                        lastCtrlPress = now;
+                    }
+                    if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                        speed /= ctrling ? 16 : 4;
+                    } else {
+                        ctrling = false;
+                    }
+
                     if (Gdx.input.isKeyPressed(Input.Keys.W)){
                         e.y += speed;
                     }

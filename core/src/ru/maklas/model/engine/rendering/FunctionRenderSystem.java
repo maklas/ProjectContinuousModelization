@@ -1,12 +1,14 @@
 package ru.maklas.model.engine.rendering;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ImmutableArray;
 import ru.maklas.mengine.Engine;
@@ -28,21 +30,24 @@ public class FunctionRenderSystem extends RenderEntitySystem {
     private Batch batch;
     private BitmapFont font;
 
-    private boolean drawNet;
+    private boolean drawAxis;
     private boolean drawPortions;
     private boolean drawFunctions;
     private boolean fillNet;
     private boolean drawNumbers;
-    private Color netColor = Color.WHITE;
+    private Color axisColor = Color.WHITE;
     private Color fillColor = Color.GRAY;
     private Color numberColor = Color.WHITE;
+
+    private String yAxisName;
+    private String xAxisName;
 
     public FunctionRenderSystem() {
         this(true, true, true, true, true);
     }
 
-    public FunctionRenderSystem(boolean drawNet, boolean drawPortions, boolean drawFunctions, boolean drawNumbers, boolean fillNet) {
-        this.drawNet = drawNet;
+    public FunctionRenderSystem(boolean drawAxis, boolean drawPortions, boolean drawFunctions, boolean drawNumbers, boolean fillNet) {
+        this.drawAxis = drawAxis;
         this.drawPortions = drawPortions;
         this.drawFunctions = drawFunctions;
         this.drawNumbers = drawNumbers;
@@ -64,7 +69,7 @@ public class FunctionRenderSystem extends RenderEntitySystem {
         Gdx.gl.glLineWidth(1);
         sr.begin(ShapeRenderer.ShapeType.Line);
 
-        if (drawNet){
+        if (drawAxis){
             float leftX = Utils.camLeftX(cam);
             float rightX = Utils.camRightX(cam);
             float botY = Utils.camBotY(cam);
@@ -93,7 +98,7 @@ public class FunctionRenderSystem extends RenderEntitySystem {
 
             } else
             if (drawPortions){
-                sr.setColor(netColor);
+                sr.setColor(axisColor);
                 float portionThickness = cam.zoom * 4;
                 float minDelta = Math.min(rightX - leftX, topY - botY);
                 double log = Math.log10(minDelta);
@@ -119,7 +124,7 @@ public class FunctionRenderSystem extends RenderEntitySystem {
                 }
             }
 
-            sr.setColor(netColor);
+            sr.setColor(axisColor);
             sr.line(leftX, 0, rightX, 0);
             sr.line(0, botY, 0, topY);
         }
@@ -145,7 +150,8 @@ public class FunctionRenderSystem extends RenderEntitySystem {
             Gdx.gl.glLineWidth(1f);
         }
 
-        if (drawNet && drawPortions && drawNumbers){
+        boolean rbp = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
+        if (drawAxis && (drawNumbers || xAxisName != null || yAxisName != null || rbp)){
             float leftX = Utils.camLeftX(cam);
             float rightX = Utils.camRightX(cam);
             float botY = Utils.camBotY(cam);
@@ -153,35 +159,51 @@ public class FunctionRenderSystem extends RenderEntitySystem {
 
             batch.begin();
             font.setColor(numberColor);
-            font.getData().setScale(cam.zoom * 0.75f);
 
-            float portionThickness = cam.zoom * 4;
-            float minDelta = Math.min(rightX - leftX, topY - botY);
-            double log = Math.log10(minDelta);
-            int logFloor = (int) (log > 0 ? Math.floor(log) : Math.ceil(log));
-            double portionStep = Math.pow(10, logFloor) * (log - logFloor > 0.5f ? 1 : 0.5f);
+            if (drawNumbers) {
+                font.getData().setScale(cam.zoom * 0.75f);
 
-            if (topY > -portionThickness && botY < portionThickness) {
-                double xStart = (Math.ceil(leftX / portionStep) * portionStep);
-                while (xStart < rightX){
-                    float x = (float) xStart;
+                float portionThickness = cam.zoom * 4;
+                float minDelta = Math.min(rightX - leftX, topY - botY);
+                double log = Math.log10(minDelta);
+                int logFloor = (int) (log > 0 ? Math.floor(log) : Math.ceil(log));
+                double portionStep = Math.pow(10, logFloor) * (log - logFloor > 0.5f ? 1 : 0.5f);
 
-                    String number = log > 0.5d ? Long.toString(Math.round(xStart)) : StringUtils.df(xStart, -(logFloor - 1));
-                    font.draw(batch, number, x + 2 * cam.zoom, 15 * cam.zoom, 10, Align.left, false);
-                    xStart += portionStep;
-                }
-            }
+                if (topY > -portionThickness && botY < portionThickness) {
+                    double xStart = (Math.ceil(leftX / portionStep) * portionStep);
+                    while (xStart < rightX) {
+                        float x = (float) xStart;
 
-            if (rightX > -portionThickness && leftX < portionThickness) {
-                double yStart = (Math.ceil(botY / portionStep) * portionStep);
-                while (yStart < topY){
-                    float y = (float) yStart;
-                    if (!MathUtils.isEqual(y, 0)) {
-                        String number = log > 0.5d ? Long.toString(Math.round(yStart)) : StringUtils.df(yStart, -(logFloor - 1));
-                        font.draw(batch, number, 5 * cam.zoom, y + 15 * cam.zoom, 10, Align.left, false);
+                        String number = log > 0.5d ? Long.toString(Math.round(xStart)) : StringUtils.df(xStart, -(logFloor - 1));
+                        font.draw(batch, number, x + 2 * cam.zoom, 15 * cam.zoom, 10, Align.left, false);
+                        xStart += portionStep;
                     }
-                    yStart += portionStep;
                 }
+
+                if (rightX > -portionThickness && leftX < portionThickness) {
+                    double yStart = (Math.ceil(botY / portionStep) * portionStep);
+                    while (yStart < topY) {
+                        float y = (float) yStart;
+                        if (!MathUtils.isEqual(y, 0)) {
+                            String number = log > 0.5d ? Long.toString(Math.round(yStart)) : StringUtils.df(yStart, -(logFloor - 1));
+                            font.draw(batch, number, 5 * cam.zoom, y + 15 * cam.zoom, 10, Align.left, false);
+                        }
+                        yStart += portionStep;
+                    }
+                }
+
+            }
+            font.getData().setScale(1 * cam.zoom);
+            if (xAxisName != null && botY < 0 && topY > 0){
+                font.draw(batch, xAxisName, rightX - (15 * cam.zoom * xAxisName.length()), -5 * cam.zoom);
+            }
+            if (yAxisName != null && leftX < 0 && rightX > 0){
+                font.draw(batch, yAxisName, -15 * cam.zoom, topY - (10 * cam.zoom));
+            }
+            if (rbp){
+                Vector2 mouse = Utils.getMouse(cam);
+                font.getData().setScale(0.75f * cam.zoom);
+                font.draw(batch, mouse.toString(), mouse.x, mouse.y + 10 * cam.zoom);
             }
 
             batch.end();
@@ -233,38 +255,52 @@ public class FunctionRenderSystem extends RenderEntitySystem {
         }
     }
 
-    public FunctionRenderSystem setDrawNet(boolean draw){
-        this.drawNet = draw;
+    /** Рисовать систему ординат **/
+    public FunctionRenderSystem setDrawAxis(boolean draw){
+        this.drawAxis = draw;
         return this;
     }
 
-    public FunctionRenderSystem setDrawPortions(boolean draw){
+    /** Рисовать пометки на осях (чёрточки) **/
+    public FunctionRenderSystem setDrawAxisPortions(boolean draw){
         this.drawPortions = draw;
         return this;
     }
 
+    /** Рисовать функции**/
     public FunctionRenderSystem setDrawFunctions(boolean draw){
         this.drawFunctions = draw;
         return this;
     }
 
-    public FunctionRenderSystem setFillNet(boolean draw){
+    /** Рисовать сетку по всему экрану **/
+    public FunctionRenderSystem setDrawNet(boolean draw){
         this.fillNet = draw;
         return this;
     }
 
-    public FunctionRenderSystem setNetColor(Color color){
-        this.netColor = color;
+    /** Цвет осей и пометок**/
+    public FunctionRenderSystem setAxisColor(Color color){
+        this.axisColor = color;
         return this;
     }
 
-    public FunctionRenderSystem setFillColor(Color color){
+    /** Цвет сетки **/
+    public FunctionRenderSystem setNetColor(Color color){
         this.fillColor = color;
         return this;
     }
 
+    /** Цвет цифр у пометок **/
     public FunctionRenderSystem setNumberColor(Color color){
         this.numberColor = color;
+        return this;
+    }
+
+    /** Дать названия осям. null - не показывать **/
+    public FunctionRenderSystem setAxisNames(String xAxisName, String yAxisName){
+        this.xAxisName = xAxisName;
+        this.yAxisName = yAxisName;
         return this;
     }
 }

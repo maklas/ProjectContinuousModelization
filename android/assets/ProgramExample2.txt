@@ -1,0 +1,10 @@
+Program program_name;
+Equations
+    x' = -2*x + 4*y
+    y' = -x + 3*y
+Params
+    method = euler
+    span = [0, 10]
+    step = 0.1
+    x0 = [3, 0]
+    plot = [x'(BLUE), y'(RED)]

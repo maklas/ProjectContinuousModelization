@@ -1,41 +1,51 @@
 package ru.maklas.model.functions;
 
-import com.badlogic.gdx.utils.FloatArray;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 
 public class FunctionFromPoints implements GraphFunction {
 
-    private FloatArray floats;
+    private Array<Vector2> points;
 
-    public FunctionFromPoints() {
-        this.floats = new FloatArray();
-    }
-
-    public FunctionFromPoints(FloatArray floats) {
-        this.floats = floats;
+    public FunctionFromPoints(Array<Vector2> points) {
+        setPoints(points);
     }
 
     @Override
     public double f(double x) {
-        if (x < 0 || x > floats.size - 1) return 0;
-        int prev = (int) Math.floor(x);
-        int next = prev + 1;
-        double portion = x % 1;
-        if (next > floats.size - 1 || portion == 0d) return floats.get(prev);
-        float prevVal = floats.get(prev);
-        float nextVal = floats.get(next);
-        return prevVal + ((nextVal - prevVal) * portion);
+        Array<Vector2> points = this.points;
+        if (points.size < 2) return Double.NaN;
+        float leftX = points.first().x;
+        float rightX = points.last().x;
+        if (x > rightX || x < leftX) return Double.NaN;
+        Vector2 prev = points.first();
+        for (int i = 1; i < points.size; i++) {
+            Vector2 curr = points.get(i);
+            if (x >= prev.x && x <= curr.x){
+                double portion = (x - prev.x) / (curr.x - prev.x);
+                return prev.y + ((curr.y - prev.y) * portion);
+            }
+            prev = curr;
+        }
+        System.err.println("Error???");
+        return Double.NaN;
     }
 
-    public void add(float data){
-        this.floats.add(data);
+    public void setPoints(Array<Vector2> points) {
+        if (points.size > 2){
+            float x = points.first().x;
+            for (int i = 1; i < points.size; i++) {
+                float nextX = points.get(i).x;
+                if (nextX <= x){
+                    throw new RuntimeException("Points are incorrect. Can't be converted in function at " + i);
+                }
+                x = nextX;
+            }
+        }
+        this.points = points.cpy();
     }
 
-    public int size(){
-        return floats.size;
+    public Array<Vector2> getPoints() {
+        return points;
     }
-
-    public void clear(){
-        floats.clear();
-    }
-
 }

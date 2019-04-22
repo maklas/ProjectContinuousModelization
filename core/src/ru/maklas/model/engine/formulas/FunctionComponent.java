@@ -11,6 +11,7 @@ public class FunctionComponent implements Component {
     public boolean trackMouse = true;
     public double precision = 1d;
     public float lineWidth = 1f; //1..2
+    public String name = "";
 
     public FunctionComponent(GraphFunction graphFunction) {
         this.graphFunction = graphFunction;
