@@ -58,21 +58,20 @@ public class FunctionGraphState extends AbstractEngineState {
     @Override
     protected void addSystems(Engine engine) {
         engine.add(new CameraSystem());
-        engine.add(new FunctionTrackingRenderSystem()
-                .setEnableTracking(true)
-                .setPrintXY(true)
-                .setPrintFunctionNames(true));
         engine.add(new EntityDebugSystem().setTextInfoEnabled(false).setZoomAtMouse(true));
-        engine.add(new FunctionRenderSystem()
-                .setDrawFunctions(true)
-                .setDrawNet(false)
-                .setDrawAxis(true)
-                .setAxisColor(Color.BLACK)
-                .setNetColor(Color.BLACK)
-                .setNumberColor(Color.BLACK));
-        engine.add(new CrossPointRenderSystem());
         engine.add(new UpdatableEntitySystem());
         engine.add(new TTLSystem());
+        engine.add(new ScalableFunctionRenderSystem()
+                .setDrawFunctions(true)
+                .setDrawAxis(true)
+                .setAxisColor(Color.BLACK)
+                .setNumberColor(Color.BLACK)
+                .setYScale(7.5));
+        //engine.add(new FunctionTrackingRenderSystem()
+        //        .setEnableTracking(true)
+        //        .setPrintXY(true)
+        //        .setPrintFunctionNames(true));
+        //engine.add(new CrossPointRenderSystem());
     }
 
     @Override
@@ -93,7 +92,6 @@ public class FunctionGraphState extends AbstractEngineState {
         if (entitiesToAdd != null) {
             engine.addAll(entitiesToAdd);
         }
-
     }
 
     @Override

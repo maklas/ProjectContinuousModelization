@@ -50,6 +50,7 @@ public class M {
         map.put(CameraSystem.class, i++);
         map.put(RenderingSystem.class, i++);
         map.put(FunctionRenderSystem.class, i++);
+        map.put(ScalableFunctionRenderSystem.class, i++);
         map.put(BiFunctionRenderSystem.class, i++);
         map.put(CrossPointRenderSystem.class, i++);
         map.put(FunctionTrackingRenderSystem.class, i++);

@@ -1,6 +1,5 @@
 package ru.maklas.model.engine.rendering;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -21,6 +20,7 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
     private Batch batch;
     private OrthographicCamera cam;
     private float mouseOverDistance = 10;
+    private double yScale = 0.5;
 
     @Override
     public void onAddedToEngine(Engine engine) {
