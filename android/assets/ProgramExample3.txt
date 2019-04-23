@@ -1,18 +1,18 @@
 Program program_name;
 
 Var
-    A = 000.1;
-    B = 0.07;
-    C = 0.01;
+    a = 0.001;
+    b = 0.07;
+    c = 0.01;
 
 Equations
-    susc' = -A * susc * sick;
-    sick' = A * susc * sick - (B + C) * sick;
-    cured' = B * sick;
+    susc' = -a * susc * sick;
+    sick' = a * susc * sick - (b + c) * sick;
+    cured' = b * sick;
 
 Params
     method = euler
     span = [0, 50];
     step = 0.5;
     x0 = [620, 10, 70];
-    plot = [susc, sick, cured];
+    plot = [susc', sick', cured'];

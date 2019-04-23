@@ -39,6 +39,7 @@ public class FunctionTrackingRenderSystem extends RenderEntitySystem {
         }
     };
     private Array<TrackResult> trackResults = new Array<>();
+    private double yScale = 1;
 
     private boolean enableTracking = true;
     private boolean printXY = true;

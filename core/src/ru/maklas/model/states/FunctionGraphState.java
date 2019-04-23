@@ -7,8 +7,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ImmutableArray;
 import ru.maklas.mengine.Bundler;
 import ru.maklas.mengine.Engine;
 import ru.maklas.mengine.Entity;
@@ -17,26 +17,25 @@ import ru.maklas.model.assets.A;
 import ru.maklas.model.assets.Asset;
 import ru.maklas.model.engine.B;
 import ru.maklas.model.engine.EntityUtils;
+import ru.maklas.model.engine.M;
 import ru.maklas.model.engine.formulas.FunctionComponent;
 import ru.maklas.model.engine.input.EngineInputAdapter;
 import ru.maklas.model.engine.other.EntityDebugSystem;
 import ru.maklas.model.engine.other.TTLSystem;
 import ru.maklas.model.engine.rendering.*;
-import ru.maklas.model.functions.FunctionUtils;
-import ru.maklas.model.functions.GraphFunction;
 
 public class FunctionGraphState extends AbstractEngineState {
 
     private final Array<Entity> entitiesToAdd;
-    private final Array<GraphFunction> functions;
-    private final Array<Array<Vector2>> pointFunctions;
+    private final double leftX;
+    private final double rightX;
     private OrthographicCamera cam;
     private ShapeRenderer sr;
 
-    public FunctionGraphState(Array<Entity> entities, Array<GraphFunction> functions, Array<Array<Vector2>> pointFunctions) {
+    public FunctionGraphState(Array<Entity> entities, double leftX, double rightX) {
         this.entitiesToAdd = entities;
-        this.functions = functions;
-        this.pointFunctions = pointFunctions;
+        this.leftX = leftX;
+        this.rightX = rightX;
     }
 
     @Override
@@ -71,7 +70,8 @@ public class FunctionGraphState extends AbstractEngineState {
         //        .setEnableTracking(true)
         //        .setPrintXY(true)
         //        .setPrintFunctionNames(true));
-        //engine.add(new CrossPointRenderSystem());
+        engine.add(new CrossPointRenderSystem()
+                .setYScale(7.5));
     }
 
     @Override
@@ -81,17 +81,52 @@ public class FunctionGraphState extends AbstractEngineState {
 
     @Override
     protected void start() {
-        if (functions != null) {
-            for (int i = 0; i < functions.size; i++) {
-                FunctionComponent fc = new FunctionComponent(functions.get(i));
-                fc.color = FunctionUtils.goodFunctionColor(i);
-                fc.lineWidth = 2f;
-                engine.add(new Entity().add(fc));
-            }
-        }
         if (entitiesToAdd != null) {
             engine.addAll(entitiesToAdd);
         }
+    }
+
+    private void doScaleAndPosition(){
+        ImmutableArray<Entity> cameras = engine.entitiesFor(CameraComponent.class);
+        if (cameras.size() == 0) return;
+        cameras.get(0).x = (float) ((rightX + leftX) / 2);
+        this.cam.zoom = (float) ((rightX - leftX) / this.cam.viewportWidth) * 1.03f;
+
+        double lowestY = Double.MAX_VALUE;
+        double highestY = Double.MIN_VALUE;
+        ImmutableArray<Entity> functions = engine.entitiesFor(FunctionComponent.class);
+        for (Entity function : functions) {
+            FunctionComponent fc = function.get(M.fun);
+            for (double x = leftX; x < rightX; x+= this.cam.zoom) {
+                double y = fc.graphFunction.f(x);
+                if (Double.isNaN(y)) continue;
+                if (y > highestY){
+                    highestY = y;
+                }
+                if (y < lowestY){
+                    lowestY = y;
+                }
+            }
+        }
+
+        double center = 0;
+        double height = 100;
+        if (lowestY < highestY - height){
+            center = (highestY + lowestY) / 2;
+            height = highestY - lowestY;
+        }
+        double yScale = (height / (cam.viewportHeight * cam.zoom)) * 1.03;
+
+        cameras.get(0).y = (float) (center / yScale);
+        CrossPointRenderSystem crossSys = engine.getSystemManager().getSystem(CrossPointRenderSystem.class);
+        ScalableFunctionRenderSystem sclRendSys = engine.getSystemManager().getSystem(ScalableFunctionRenderSystem.class);
+        if (crossSys != null){
+            crossSys.setYScale(yScale);
+        }
+        if (sclRendSys != null){
+            sclRendSys.setYScale(yScale);
+        }
+
     }
 
     @Override
@@ -99,6 +134,9 @@ public class FunctionGraphState extends AbstractEngineState {
         engine.update(dt);
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             popState();
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.J)){
+            doScaleAndPosition();
         }
     }
 
@@ -118,16 +156,5 @@ public class FunctionGraphState extends AbstractEngineState {
         batch.setProjectionMatrix(cam.combined);
         sr.setProjectionMatrix(cam.combined);
         engine.render();
-
-
-        if (pointFunctions != null) {
-            sr.begin(ShapeRenderer.ShapeType.Line);
-            for (int i = 0; i < pointFunctions.size; i++) {
-                sr.setColor(FunctionUtils.goodFunctionColor(i));
-                Array<Vector2> f = pointFunctions.get(i);
-                FunctionUtils.renderPoints(sr, f);
-            }
-            sr.end();
-        }
     }
 }

@@ -25,6 +25,7 @@ public class TextInputComponent extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
         rSyntaxTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).underline = true;
         rSyntaxTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).foreground = Color.RED;
+        rSyntaxTextArea.setFont(rSyntaxTextArea.getFont().deriveFont(16f));
     }
 
     public void setText(String text){

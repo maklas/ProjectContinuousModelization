@@ -58,7 +58,7 @@ public class SwingLauncher extends JFrame {
             try {
                 model = Compiler.compile(text);
                 Array<Entity> entities = convertToEntities(model);
-                Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, null, null))));
+                Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, model.getSpanStart().getAsDouble(), model.getSpanEnd().getAsDouble()))));
                 SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
                 errorTextArea.setText("Compiled successfully!");
                 errorTextArea.setDisabledTextColor(new Color(0, 0.65f, 0));

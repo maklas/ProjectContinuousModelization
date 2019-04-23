@@ -84,20 +84,20 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
         if (drawAxis){
             float leftX = Utils.camLeftX(cam);
             float rightX = Utils.camRightX(cam);
-            float trueBotY = Utils.camBotY(cam);
-            float trueTopY = Utils.camTopY(cam);
             float botY = Utils.camBotY(cam);
             float topY = Utils.camTopY(cam);
+            float trueBotY = Utils.camBotY(subCam);
+            float trueTopY = Utils.camTopY(subCam);
 
             if (drawPortions){
                 sr.setColor(axisColor);
                 float portionThickness = cam.zoom * 4;
-                float minDelta = Math.min(rightX - leftX, trueTopY - trueBotY);
+                float minDelta = Math.min(rightX - leftX, topY - botY);
                 double log = Math.log10(minDelta);
                 int logFloor = (int) (log > 0 ? Math.floor(log) : Math.ceil(log));
                 double portionStep = Math.pow(10, logFloor - 1) * (log - logFloor > 0.5f ? 1 : 0.5f);
 
-                if (trueTopY > -portionThickness && trueBotY < portionThickness) {
+                if (topY > -portionThickness && botY < portionThickness) {
                     double xStart = (Math.ceil(leftX / portionStep) * portionStep);
                     while (xStart < rightX){
                         float x = (float) xStart;
@@ -118,7 +118,7 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
 
             sr.setColor(axisColor);
             sr.line(leftX, 0, rightX, 0);
-            sr.line(0, trueBotY, 0, trueTopY);
+            sr.line(0, botY, 0, topY);
         }
 
         float currentLineWidth = 1f;
@@ -148,11 +148,12 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
             float rightX = Utils.camRightX(cam);
             float botY = Utils.camBotY(cam);
             float topY = Utils.camTopY(cam);
+            float trueBotY = Utils.camBotY(subCam);
+            float trueTopY = Utils.camTopY(subCam);
 
             batch.begin();
             font.setColor(numberColor);
 
-            //TODO
             if (drawNumbers) {
                 font.getData().setScale(cam.zoom * 0.75f);
 
@@ -174,11 +175,11 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
                 }
 
                 if (rightX > -portionThickness && leftX < portionThickness) {
-                    double yStart = (Math.ceil(botY / portionStep) * portionStep);
-                    while (yStart < topY) {
+                    double yStart = (Math.ceil(trueBotY / portionStep) * portionStep);
+                    while (yStart < trueTopY) {
                         float y = (float) yStart;
                         if (!MathUtils.isEqual(y, 0)) {
-                            String number = log > 0.5d ? Long.toString(Math.round(yStart)) : StringUtils.df(yStart, -(logFloor - 1));
+                            String number = log > 0.5d ? Long.toString(Math.round(yStart * yScale)) : StringUtils.df(yStart * yScale, -(logFloor - 1));
                             font.draw(batch, number, 5 * cam.zoom, y + 15 * cam.zoom, 10, Align.left, false);
                         }
                         yStart += portionStep;
@@ -201,22 +202,6 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
 
             batch.end();
         }
-    }
-
-    public float leftX(){
-        return Utils.camLeftX(cam);
-    }
-
-    public float rightX(){
-        return Utils.camRightX(cam);
-    }
-
-    public float topY(){
-        return Utils.camTopY(subCam);
-    }
-
-    public float botY(){
-        return Utils.camBotY(subCam);
     }
 
     private void draw(ShapeRenderer sr, GraphFunction fun, double precision) {

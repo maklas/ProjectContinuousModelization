@@ -20,7 +20,7 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
     private Batch batch;
     private OrthographicCamera cam;
     private float mouseOverDistance = 10;
-    private double yScale = 0.5;
+    private double yScale = 10;
 
     @Override
     public void onAddedToEngine(Engine engine) {
@@ -43,7 +43,7 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
             batch.setColor(cross.color);
             float scale = 0.25f * cam.zoom;
             float x = cross.x;
-            float y = cross.y;
+            float y = (float) (cross.y / yScale);
             ImageAssets.draw(batch, A.images.circle, x, y, 0.5f, 0.5f, scale, scale, 0);
             if (mouse.dst(x, y) < MOD){
                 String text = Utils.vec1.set(x, y) + " | " + cross.a.get(M.fun).name + " + " + cross.b.get(M.fun).name;
@@ -54,5 +54,10 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
         }
 
         batch.end();
+    }
+
+    public CrossPointRenderSystem setYScale(double yScale){
+        this.yScale = yScale;
+        return this;
     }
 }
