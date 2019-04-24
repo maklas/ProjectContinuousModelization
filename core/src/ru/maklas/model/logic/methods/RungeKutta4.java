@@ -28,12 +28,12 @@ public class RungeKutta4 extends BaseMethod {
                 xArg.setArgumentValue(x + step);
                 fArg.setArgumentValue(function.lastY + step * k3);
                 double k4 = function.expression.calculate();
-
                 fArg.setArgumentValue(function.lastY);
 
-                double result = fArg.getArgumentValue() + (step  / 6.0) * (k1 * 2 * k2 + 2 * k3 + k4);
-                fArg.setArgumentValue(result);
+
+                double result = function.lastY + (step  / 6.0) * (k1 * 2 * k2 + 2 * k3 + k4);
                 function.add(x, result);
+                fArg.setArgumentValue(result);
             }
         }
     }
