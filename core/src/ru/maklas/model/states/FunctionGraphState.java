@@ -120,8 +120,8 @@ public class FunctionGraphState extends AbstractEngineState {
         }
 
         double center = 0;
-        double height = 100;
-        if (lowestY < highestY - height){
+        double height = 1;
+        if (lowestY < highestY){
             center = (highestY + lowestY) / 2;
             height = highestY - lowestY;
         }
