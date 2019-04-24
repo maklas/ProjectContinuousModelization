@@ -17,15 +17,22 @@ public class RungeKutta4 extends BaseMethod {
             for (Function function : functions) {
                 Argument fArg = environment.get(function.name);
                 xArg.setArgumentValue(x);
+
                 double k1 = function.expression.calculate();
-                xArg.setArgumentValue(x + step * (2f/ 3f));
-                fArg.setArgumentValue(fArg.getArgumentValue() + (2d / 3d) * step * k1);
+                xArg.setArgumentValue(x + step / 2.0);
+                fArg.setArgumentValue(function.lastY + (step * k1) / 2.0);
                 double k2 = function.expression.calculate();
+                xArg.setArgumentValue(x + step / 2.0);
+                fArg.setArgumentValue(function.lastY + (step * k2) / 2.0);
+                double k3 = function.expression.calculate();
+                xArg.setArgumentValue(x + step);
+                fArg.setArgumentValue(function.lastY + step * k3);
+                double k4 = function.expression.calculate();
+
                 fArg.setArgumentValue(function.lastY);
 
-                Argument val = environment.get(function.name);
-                double result = val.getArgumentValue() + step * (k1 * 0.25 + k2 * 0.75);
-                val.setArgumentValue(result);
+                double result = fArg.getArgumentValue() + (step  / 6.0) * (k1 * 2 * k2 + 2 * k3 + k4);
+                fArg.setArgumentValue(result);
                 function.add(x, result);
             }
         }
