@@ -17,7 +17,7 @@ import ru.maklas.model.logic.EvaluationException;
 import ru.maklas.model.logic.Token;
 import ru.maklas.model.logic.methods.Euler;
 import ru.maklas.model.logic.methods.Method;
-import ru.maklas.model.logic.methods.RungeKutta;
+import ru.maklas.model.logic.methods.RungeKutta4;
 import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.logic.model.Plot;
 import ru.maklas.model.mnw.MNW;
@@ -115,7 +115,7 @@ public class SwingLauncher extends JFrame {
         if (model.getMethod().getTextValue().equalsIgnoreCase("euler")){
             method = new Euler();
         } else if (model.getMethod().getTextValue().equalsIgnoreCase("rk4")){
-            method = new RungeKutta();
+            method = new RungeKutta4();
         } else {
             throw new RuntimeException("Unknown method: " + model.getMethod().getTextValue());
         }
