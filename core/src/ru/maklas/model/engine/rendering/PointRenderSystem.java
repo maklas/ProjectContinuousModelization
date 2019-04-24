@@ -12,9 +12,10 @@ import ru.maklas.model.assets.A;
 import ru.maklas.model.assets.ImageAssets;
 import ru.maklas.model.engine.B;
 import ru.maklas.model.engine.M;
+import ru.maklas.model.utils.StringUtils;
 import ru.maklas.model.utils.Utils;
 
-public class CrossPointRenderSystem extends RenderEntitySystem {
+public class PointRenderSystem extends RenderEntitySystem {
 
     private ImmutableArray<Entity> crossPoints;
     private Batch batch;
@@ -25,7 +26,7 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
     @Override
     public void onAddedToEngine(Engine engine) {
         super.onAddedToEngine(engine);
-        crossPoints = entitiesFor(CrossPointComponent.class);
+        crossPoints = entitiesFor(PointComponent.class);
         batch = engine.getBundler().get(B.batch);
         cam = engine.getBundler().get(B.cam);
     }
@@ -39,14 +40,14 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
         batch.begin();
 
         for (Entity crossPoint : crossPoints) {
-            CrossPointComponent cross = crossPoint.get(M.cross);
+            PointComponent cross = crossPoint.get(M.cross);
             batch.setColor(cross.color);
             float scale = 0.25f * cam.zoom;
             float x = cross.x;
             float y = (float) (cross.y / yScale);
             ImageAssets.draw(batch, A.images.circle, x, y, 0.5f, 0.5f, scale, scale, 0);
             if (mouse.dst(x, y) < MOD){
-                String text = Utils.vec1.set(x, y) + " | " + cross.a.get(M.fun).name + " + " + cross.b.get(M.fun).name;
+                String text = Utils.vec1.set(x, cross.y) + (StringUtils.isEmpty(cross.name) ? "" : " | " + cross.name);
                 BitmapFont font = A.images.font;
                 font.setColor(cross.color);
                 font.draw(batch, text, x + 10 * cam.zoom, y - 50 * cam.zoom);
@@ -56,7 +57,7 @@ public class CrossPointRenderSystem extends RenderEntitySystem {
         batch.end();
     }
 
-    public CrossPointRenderSystem setYScale(double yScale){
+    public PointRenderSystem setYScale(double yScale){
         this.yScale = yScale;
         return this;
     }

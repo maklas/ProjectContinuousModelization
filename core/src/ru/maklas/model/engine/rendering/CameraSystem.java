@@ -132,8 +132,8 @@ public class CameraSystem extends EntitySystem {
             }
 
             cam.position.set(e.x, e.y, cam.position.z);
-            cc.vX = (e.x - cc.lastFrameX) / dt;
-            cc.vY = (e.y - cc.lastFrameY) / dt;
+            cc.vX = (cam.position.x - cc.lastFrameX) / dt;
+            cc.vY = (cam.position.y - cc.lastFrameY) / dt;
         }
     }
 

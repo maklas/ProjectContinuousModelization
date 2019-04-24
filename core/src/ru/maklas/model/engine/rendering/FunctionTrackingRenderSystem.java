@@ -157,11 +157,12 @@ public class FunctionTrackingRenderSystem extends RenderEntitySystem {
         TrackResult tr = trackResultPool.obtain();
         tr.fName = fc.name;
         tr.lineFrom.set(mouse);
-        double y = fc.graphFunction.f(mouse.x);
+        double realY = fc.graphFunction.f(mouse.x);
+        double y = realY / yScale;
         double clampY = MathUtils.clamp(y, Utils.camBotY(cam), Utils.camTopY(cam));
         tr.lineTo.set(mouse.x, ((float) clampY));
         tr.trackColor.set(fc.color);
-        tr.yVal = y;
+        tr.yVal = realY;
         tr.xVal = mouse.x;
         tr.textPos.set(mouse.x, ((float) clampY));
         if (clampY < Utils.camBotY(cam) + (15 * cam.zoom)){
@@ -202,6 +203,11 @@ public class FunctionTrackingRenderSystem extends RenderEntitySystem {
 
     private boolean xWithinCam(float x){
         return x > Utils.camLeftX(cam) && x < Utils.camRightX(cam);
+    }
+
+    public FunctionTrackingRenderSystem setYScale(double yScale){
+        this.yScale = yScale;
+        return this;
     }
 
     private class TrackResult implements Pool.Poolable {

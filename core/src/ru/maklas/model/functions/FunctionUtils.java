@@ -69,8 +69,27 @@ public class FunctionUtils {
                 }
             }
         }
-
         return points;
+    }
+
+    /**
+     * @return [min, max]
+     */
+    public static Array<Vector2> findMinMax(Array<Vector2> f){
+        Vector2 min = new Vector2(0, Float.MAX_VALUE);
+        Vector2 max = new Vector2(0, Float.MIN_VALUE);
+        for (Vector2 p : f) {
+            if (p.y > max.y){
+                max.x = p.x;
+                max.y = p.y;
+            }
+            if (p.y < min.y){
+                min.x = p.x;
+                min.y = p.y;
+            }
+        }
+
+        return Array.with(min, max);
     }
 
     public static Array<Vector2> euler(GraphFunction f, float rangeStart, float rangeEnd, float step, float y0){

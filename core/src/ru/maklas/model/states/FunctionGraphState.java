@@ -7,8 +7,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ImmutableArray;
+import ru.maklas.libs.Timer;
 import ru.maklas.mengine.Bundler;
 import ru.maklas.mengine.Engine;
 import ru.maklas.mengine.Entity;
@@ -31,6 +33,9 @@ public class FunctionGraphState extends AbstractEngineState {
     private final double rightX;
     private OrthographicCamera cam;
     private ShapeRenderer sr;
+    private double oldYScale = 1;
+    private double targetYScale = 1;
+    private Timer smoothScaleTimer;
 
     public FunctionGraphState(Array<Entity> entities, double leftX, double rightX) {
         this.entitiesToAdd = entities;
@@ -66,11 +71,12 @@ public class FunctionGraphState extends AbstractEngineState {
                 .setAxisColor(Color.BLACK)
                 .setNumberColor(Color.BLACK)
                 .setYScale(7.5));
-        //engine.add(new FunctionTrackingRenderSystem()
-        //        .setEnableTracking(true)
-        //        .setPrintXY(true)
-        //        .setPrintFunctionNames(true));
-        engine.add(new CrossPointRenderSystem()
+        engine.add(new FunctionTrackingRenderSystem()
+                .setEnableTracking(true)
+                .setPrintXY(true)
+                .setPrintFunctionNames(true)
+                .setYScale(7.5));
+        engine.add(new PointRenderSystem()
                 .setYScale(7.5));
     }
 
@@ -84,9 +90,13 @@ public class FunctionGraphState extends AbstractEngineState {
         if (entitiesToAdd != null) {
             engine.addAll(entitiesToAdd);
         }
+        smoothScaleTimer = new Timer(1f, false, () -> setYScale(targetYScale));
+        smoothScaleTimer.setEnabled(false);
+        doScaleAndPosition();
     }
 
     private void doScaleAndPosition(){
+        oldYScale = targetYScale;
         ImmutableArray<Entity> cameras = engine.entitiesFor(CameraComponent.class);
         if (cameras.size() == 0) return;
         cameras.get(0).x = (float) ((rightX + leftX) / 2);
@@ -118,15 +128,23 @@ public class FunctionGraphState extends AbstractEngineState {
         double yScale = (height / (cam.viewportHeight * cam.zoom)) * 1.03;
 
         cameras.get(0).y = (float) (center / yScale);
-        CrossPointRenderSystem crossSys = engine.getSystemManager().getSystem(CrossPointRenderSystem.class);
+        targetYScale = yScale;
+        smoothScaleTimer.setEnabled(true);
+    }
+
+    private void setYScale(double yScale){
+        PointRenderSystem crossSys = engine.getSystemManager().getSystem(PointRenderSystem.class);
         ScalableFunctionRenderSystem sclRendSys = engine.getSystemManager().getSystem(ScalableFunctionRenderSystem.class);
+        FunctionTrackingRenderSystem trackSys = engine.getSystemManager().getSystem(FunctionTrackingRenderSystem.class);
         if (crossSys != null){
             crossSys.setYScale(yScale);
         }
         if (sclRendSys != null){
             sclRendSys.setYScale(yScale);
         }
-
+        if (trackSys != null){
+            trackSys.setYScale(yScale);
+        }
     }
 
     @Override
@@ -137,6 +155,12 @@ public class FunctionGraphState extends AbstractEngineState {
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.J)){
             doScaleAndPosition();
+        }
+        smoothScaleTimer.update(dt);
+        if (smoothScaleTimer.isEnabled()){
+            float a = smoothScaleTimer.getCurrentTime() / smoothScaleTimer.getUpdateRate();
+            double currentYScale = oldYScale + (targetYScale - oldYScale) * a;
+            setYScale(currentYScale);
         }
     }
 

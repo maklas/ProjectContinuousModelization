@@ -4,13 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglAWTCanvas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
-import javafx.scene.layout.Pane;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import ru.maklas.mengine.Entity;
 import ru.maklas.model.ProjectContinuousModelization;
 import ru.maklas.model.engine.M;
 import ru.maklas.model.engine.formulas.FunctionComponent;
-import ru.maklas.model.engine.rendering.CrossPointComponent;
+import ru.maklas.model.engine.rendering.PointComponent;
 import ru.maklas.model.functions.FunctionFromPoints;
 import ru.maklas.model.functions.FunctionUtils;
 import ru.maklas.model.logic.Compiler;
@@ -25,6 +24,7 @@ import ru.maklas.model.utils.gsm_lib.GSMClearAndSet;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class SwingLauncher extends JFrame {
 
@@ -84,6 +84,25 @@ public class SwingLauncher extends JFrame {
         SwingUtilities.invokeLater(() -> {
             split.setDividerLocation(JSplitPane.CENTER_ALIGNMENT);
             leftSplit.setDividerLocation(0.8);
+            inputComponent.setText("Program program_name;\n" +
+                    "\n" +
+                    "Var\n" +
+                    "    a = 0.001;\n" +
+                    "    b = 0.07;\n" +
+                    "    c = 0.01;\n" +
+                    "\n" +
+                    "Equations\n" +
+                    "    susc' = -a * susc * sick;\n" +
+                    "    sick' = a * susc * sick - (b + c) * sick;\n" +
+                    "    cured' = b * sick;\n" +
+                    "\n" +
+                    "Params\n" +
+                    "    method = euler\n" +
+                    "    span = [0, 50];\n" +
+                    "    step = 0.5;\n" +
+                    "    x0 = [620, 10, 70];\n" +
+                    "    plot = [susc', sick', cured'];");
+            inputComponent.dispatchEvent(new ActionEvent(split, 0, "click"));
         });
     }
 
@@ -93,20 +112,31 @@ public class SwingLauncher extends JFrame {
         if (model.getMethod().getTextValue().equalsIgnoreCase("euler")){
             Array<Array<Vector2>> functions = new Euler().solve(model);
             for (int i = 0; i < model.getEquations().size; i++) {
-                Plot plot = null;
-                for (Plot p : model.getPlots()) {
-                    if (equals(model.getEquations().get(i).getName(), p.getFunctionName())){
-                        plot = p;
-                        break;
+                if (!model.getPlots().isEmpty()) {
+                    Plot plot = null;
+                    for (Plot p : model.getPlots()) {
+                        if (equals(model.getEquations().get(i).getName(), p.getFunctionName())) {
+                            plot = p;
+                            break;
+                        }
                     }
-                }
-                if (plot != null){
+                    if (plot != null) {
+                        Entity e = new Entity();
+                        FunctionFromPoints f = new FunctionFromPoints(functions.get(i));
+                        FunctionComponent fc = new FunctionComponent(f);
+                        fc.lineWidth = 2f;
+                        fc.color = plot.getColor();
+                        fc.name = plot.getFunctionName().getTextValue();
+                        e.add(fc);
+                        entities.add(e);
+                    }
+                } else {
                     Entity e = new Entity();
                     FunctionFromPoints f = new FunctionFromPoints(functions.get(i));
                     FunctionComponent fc = new FunctionComponent(f);
                     fc.lineWidth = 2f;
-                    fc.color = plot.getColor();
-                    fc.name = plot.getFunctionName().getTextValue();
+                    fc.color = FunctionUtils.goodFunctionColor(i);
+                    fc.name = model.getEquations().get(i).getPureEquationName();
                     e.add(fc);
                     entities.add(e);
                 }
@@ -114,16 +144,22 @@ public class SwingLauncher extends JFrame {
 
             int size = entities.size;
             for (int i = 0; i < size; i++) {
+                Entity a = entities.get(i);
+                FunctionFromPoints f1 = (FunctionFromPoints) a.get(M.fun).graphFunction;
+
+                Array<Vector2> minMax = FunctionUtils.findMinMax(f1.getPoints());
+                if (minMax.get(0).y != Float.MAX_VALUE && minMax.get(1).y != Float.MIN_VALUE){
+                    entities.add(new Entity().add(new PointComponent(minMax.get(0).x, minMax.get(0).y, "", com.badlogic.gdx.graphics.Color.BLUE)));
+                    entities.add(new Entity().add(new PointComponent(minMax.get(1).x, minMax.get(1).y, "", com.badlogic.gdx.graphics.Color.RED)));
+                }
+
                 for (int j = i + 1; j < size; j++) {
-                    Entity a = entities.get(i);
                     Entity b = entities.get(j);
-                    FunctionFromPoints f1 = (FunctionFromPoints) a.get(M.fun).graphFunction;
                     FunctionFromPoints f2 = (FunctionFromPoints) b.get(M.fun).graphFunction;
                     Array<Vector2> crossPoints = FunctionUtils.findCrossPoints(f1.getPoints(), f2.getPoints());
                     for (Vector2 crossPoint : crossPoints) {
-                        entities.add(new Entity().add(new CrossPointComponent(a, b, crossPoint.x, crossPoint.y)));
+                        entities.add(new Entity().add(new PointComponent(crossPoint.x, crossPoint.y, a.get(M.fun).name + " + " + b.get(M.fun).name)));
                     }
-
                 }
             }
             return entities;

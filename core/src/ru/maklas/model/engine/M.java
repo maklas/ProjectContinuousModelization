@@ -31,7 +31,7 @@ public class M {
 
     public static final ComponentMapper<FunctionComponent>              fun = ComponentMapper.of(FunctionComponent.class);
     public static final ComponentMapper<BiFunctionComponent>            biFun = ComponentMapper.of(BiFunctionComponent.class);
-    public static final ComponentMapper<CrossPointComponent>            cross = ComponentMapper.of(CrossPointComponent.class);
+    public static final ComponentMapper<PointComponent>            cross = ComponentMapper.of(PointComponent.class);
 
 
     /** Сортируем системы в порядке их обновления в Engine.update() **/
@@ -52,7 +52,7 @@ public class M {
         map.put(FunctionRenderSystem.class, i++);
         map.put(ScalableFunctionRenderSystem.class, i++);
         map.put(BiFunctionRenderSystem.class, i++);
-        map.put(CrossPointRenderSystem.class, i++);
+        map.put(PointRenderSystem.class, i++);
         map.put(FunctionTrackingRenderSystem.class, i++);
         map.put(EntityDebugSystem.class, i++);
     }

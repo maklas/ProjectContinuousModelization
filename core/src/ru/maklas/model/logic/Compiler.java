@@ -195,9 +195,6 @@ public class Compiler {
             }
         }
 
-        if (model.getPlots().isEmpty()){
-            throw new EvaluationException("Plots are not defined. Specify plots in params");
-        }
         //PLOTS
         for (int i = 0; i < model.getPlots().size; i++) {
             Plot plot = model.getPlots().get(i);
