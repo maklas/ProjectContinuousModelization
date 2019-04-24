@@ -21,7 +21,7 @@ public class Compiler {
     private static final Pattern tokenizingPattern = Pattern.compile(wordPattern.pattern() + "|" + numberPattern.pattern() + "|\\[|]|;|\\*|/|\\+|-|=|,|\\(|\\)|\\^");
     private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\s\\w\\-+.*/^',()\\\\_;=\\[]]");
     private static final Array<String> headers = Array.with("program", "var", "equations", "params");
-    private static final Array<String> methods = Array.with("euler", "rk4");
+    private static final Array<String> methods = Array.with("euler", "rk4", "rk45");
 
     public static Model compile(String text) throws EvaluationException {
         Array<Token> tokens = tokenize(text);
@@ -178,7 +178,11 @@ public class Compiler {
             throw new EvaluationException("Step must be positive number", model.getStep());
         }
         if (spanEnd - spanStart < step){
-            throw new EvaluationException("Span must be bigger than steo");
+            throw new EvaluationException("Span must be bigger than step");
+        }
+        //STEP-ERROR
+        if ("rk45".equalsIgnoreCase(model.getMethod().getTextValue()) && model.getError() == null){
+            throw new EvaluationException("No step error specified for Runge-kutta with variable step method");
         }
         //DEFAULTS
         if (model.getDefaults().size == 0){
@@ -324,6 +328,10 @@ public class Compiler {
                 } else if ("step".equalsIgnoreCase(paramName)){
                     expectToken(valueStart, tokens, TokenType.number, "number", tokens.get(valueStart - 1));
                     model.setStep(tokens.get(valueStart));
+                    i = valueStart + 1;
+                } else if ("error".equalsIgnoreCase(paramName)){
+                    expectToken(valueStart, tokens, TokenType.number, "number", tokens.get(valueStart - 1));
+                    model.setError(tokens.get(valueStart));
                     i = valueStart + 1;
                 } else if ("span".equalsIgnoreCase(paramName)){
                     expectToken(valueStart, tokens, "[", "'['", tokens.get(valueStart - 1));

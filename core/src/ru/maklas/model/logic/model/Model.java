@@ -14,6 +14,7 @@ public class Model {
     private Token spanStart;
     private Token spanEnd;
     private Token step;
+    private Token error;
     private String source;
 
     public Model() {
@@ -74,6 +75,14 @@ public class Model {
 
     public Array<Plot> getPlots() {
         return plots;
+    }
+
+    public Token getError() {
+        return error;
+    }
+
+    public void setError(Token error) {
+        this.error = error;
     }
 
     public String getSource() {
