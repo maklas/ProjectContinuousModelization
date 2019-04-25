@@ -66,9 +66,9 @@ public class SwingLauncher extends JFrame {
                 errorTextArea.setText("Compiled successfully!");
                 errorTextArea.setDisabledTextColor(new Color(0, 0.65f, 0));
             } catch (Exception exception) {
+                errorTextArea.setDisabledTextColor(Color.RED);
                 if (exception instanceof EvaluationException){
                     errorTextArea.setText(exception.getMessage());
-                    errorTextArea.setDisabledTextColor(Color.RED);
                     Token token = ((EvaluationException) exception).getToken();
                     if (token != null) {
                         inputComponent.highlightError(token);

@@ -162,6 +162,11 @@ public class FunctionGraphState extends AbstractEngineState {
             double currentYScale = oldYScale + (targetYScale - oldYScale) * a;
             setYScale(currentYScale);
         }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
+            ScalableFunctionRenderSystem sys = engine.getSystemManager().getSystem(ScalableFunctionRenderSystem.class);
+            sys.setDrawPoints(!sys.isDrawPoints());
+        }
     }
 
     @Override

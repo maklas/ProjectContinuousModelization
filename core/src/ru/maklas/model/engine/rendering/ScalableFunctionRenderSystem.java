@@ -10,14 +10,17 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ImmutableArray;
 import ru.maklas.mengine.Engine;
 import ru.maklas.mengine.Entity;
 import ru.maklas.mengine.RenderEntitySystem;
 import ru.maklas.model.assets.A;
+import ru.maklas.model.assets.ImageAssets;
 import ru.maklas.model.engine.B;
 import ru.maklas.model.engine.M;
 import ru.maklas.model.engine.formulas.FunctionComponent;
+import ru.maklas.model.functions.FunctionFromPoints;
 import ru.maklas.model.functions.GraphFunction;
 import ru.maklas.model.utils.StringUtils;
 import ru.maklas.model.utils.Utils;
@@ -37,6 +40,8 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
     private boolean drawPortions;
     /** Рисовать функции**/
     private boolean drawFunctions;
+    /** Рисовать точки от FunctionFromPoints **/
+    private boolean drawPoints;
     /** Рисовать цифры на осях**/
     private boolean drawNumbers;
     /** Скейлинг по оси Y. X всегда соотсветствует экрану **/
@@ -139,6 +144,20 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
 
         sr.end();
 
+
+        if (drawPoints) {
+            batch.begin();
+            for (Entity formula : formulas) {
+                FunctionComponent fc = formula.get(M.fun);
+                if (fc.graphFunction instanceof FunctionFromPoints){
+                    Array<Vector2> points = ((FunctionFromPoints) fc.graphFunction).getPoints();
+                    batch.setColor(fc.color);
+                    renderPoints(points);
+                }
+            }
+            batch.end();
+        }
+
         if (!MathUtils.isEqual(currentLineWidth, 1)){
             Gdx.gl.glLineWidth(1f);
         }
@@ -207,6 +226,16 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
         }
     }
 
+
+    private void renderPoints(Array<Vector2> points){
+        for (Vector2 p : points) {
+            float scale = 0.25f * cam.zoom;
+            float x = p.x;
+            float y = (float) (p.y / yScale);
+            ImageAssets.draw(batch, A.images.circle, x, y, 0.5f, 0.5f, scale, scale, 0);
+        }
+    }
+
     private void draw(ShapeRenderer sr, GraphFunction fun, double precision) {
         double min = Utils.camLeftX(cam);
         double max = Utils.camRightX(cam);
@@ -260,6 +289,12 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
         return this;
     }
 
+    /** Рисовать точки у FunctionFromPoints **/
+    public ScalableFunctionRenderSystem setDrawPoints(boolean draw){
+        this.drawPoints = draw;
+        return this;
+    }
+
     /** Дать названия осям. null - не показывать **/
     public ScalableFunctionRenderSystem setAxisNames(String xAxisName, String yAxisName){
         this.xAxisName = xAxisName;
@@ -271,5 +306,9 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
     public ScalableFunctionRenderSystem setYScale(double scale){
         this.yScale = scale;
         return this;
+    }
+
+    public boolean isDrawPoints() {
+        return drawPoints;
     }
 }
