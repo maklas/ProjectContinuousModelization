@@ -44,12 +44,22 @@ public class RungeKutta45 extends BaseMethod {
 
                 double result4 = y + (25.0/216.0)*k1 + (1408.0/2565.0)*k3 + (2197.0/4101.0)*k4 - 0.2*k5;
                 double result5 = y + (16.0/135.0)*k1 + (6656.0/12825.0)*k3 + (28561.0/56430.0)*k4 - (9.0/50.0)*k5 + (8.0/55.0)*k6;
-                double s = Math.sqrt(Math.sqrt((err * step) / (2 * Math.abs(result5 - result4))));
 
                 function.add(x, result5);
                 yArg.setArgumentValue(result5);
-                step *= s;
+                step = calculateNewStep(step, err, result4, result5);
             }
         }
+    }
+
+    private static double calculateNewStep(double oldStep, double err, double rk4, double rk5){
+        double s = Math.pow((err * oldStep) / (2 * Math.abs(rk5 - rk4)), 0.25);
+        double newStep = oldStep * s;
+        if (newStep < 0.01){
+            newStep = 0.01;
+        } else if (newStep > 3){
+            newStep = 3;
+        }
+        return newStep;
     }
 }
