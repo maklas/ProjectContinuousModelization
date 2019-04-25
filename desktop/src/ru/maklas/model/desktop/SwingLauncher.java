@@ -156,26 +156,36 @@ public class SwingLauncher extends JFrame {
             }
         }
 
-        int size = entities.size;
-        for (int i = 0; i < size; i++) {
-            Entity a = entities.get(i);
-            FunctionFromPoints f1 = (FunctionFromPoints) a.get(M.fun).graphFunction;
+        long val = 1;
+        for (Array<Vector2> function : functions) {
+            val *= function.size;
+        }
 
-            Array<Vector2> minMax = FunctionUtils.findMinMax(f1.getPoints());
-            if (minMax.get(0).y != Float.MAX_VALUE && minMax.get(1).y != Float.MIN_VALUE && !Float.isNaN(minMax.get(0).y) && !Float.isNaN(minMax.get(1).y)){
-                entities.add(new Entity().add(new PointComponent(minMax.get(0).x, minMax.get(0).y, "", com.badlogic.gdx.graphics.Color.BLUE)));
-                entities.add(new Entity().add(new PointComponent(minMax.get(1).x, minMax.get(1).y, "", com.badlogic.gdx.graphics.Color.RED)));
-            }
 
-            for (int j = i + 1; j < size; j++) {
-                Entity b = entities.get(j);
-                FunctionFromPoints f2 = (FunctionFromPoints) b.get(M.fun).graphFunction;
-                Array<Vector2> crossPoints = FunctionUtils.findCrossPoints(f1.getPoints(), f2.getPoints());
-                for (Vector2 crossPoint : crossPoints) {
-                    if (!Float.isNaN(crossPoint.x) && !Float.isNaN(crossPoint.y))
-                        entities.add(new Entity().add(new PointComponent(crossPoint.x, crossPoint.y, a.get(M.fun).name + " + " + b.get(M.fun).name)));
+        if (val < 5_000_000_000_000L) {
+            int size = entities.size;
+            for (int i = 0; i < size; i++) {
+                Entity a = entities.get(i);
+                FunctionFromPoints f1 = (FunctionFromPoints) a.get(M.fun).graphFunction;
+
+                Array<Vector2> minMax = FunctionUtils.findMinMax(f1.getPoints());
+                if (minMax.get(0).y != Float.MAX_VALUE && minMax.get(1).y != Float.MIN_VALUE && !Float.isNaN(minMax.get(0).y) && !Float.isNaN(minMax.get(1).y)) {
+                    entities.add(new Entity().add(new PointComponent(minMax.get(0).x, minMax.get(0).y, "", com.badlogic.gdx.graphics.Color.BLUE)));
+                    entities.add(new Entity().add(new PointComponent(minMax.get(1).x, minMax.get(1).y, "", com.badlogic.gdx.graphics.Color.RED)));
+                }
+
+                for (int j = i + 1; j < size; j++) {
+                    Entity b = entities.get(j);
+                    FunctionFromPoints f2 = (FunctionFromPoints) b.get(M.fun).graphFunction;
+                    Array<Vector2> crossPoints = FunctionUtils.findCrossPoints(f1.getPoints(), f2.getPoints());
+                    for (Vector2 crossPoint : crossPoints) {
+                        if (!Float.isNaN(crossPoint.x) && !Float.isNaN(crossPoint.y))
+                            entities.add(new Entity().add(new PointComponent(crossPoint.x, crossPoint.y, a.get(M.fun).name + " + " + b.get(M.fun).name)));
+                    }
                 }
             }
+        } else {
+            System.err.println("High complexity. Crossing points won't be calculated");
         }
 
         return entities;

@@ -47,11 +47,25 @@ public class RungeKutta45 extends BaseMethod {
 
                 function.add(x, result5);
                 yArg.setArgumentValue(result5);
-                step = calculateNewStep(step, err, result4, result5);
+                step = calculateNewStep2(step, err, result4, result5);
             }
         }
     }
 
+    private static double calculateNewStep2(double oldStep, double err, double rk4, double rk5){
+        double eMax = 0.5;
+        double eMin = 0.05;
+        double stepMin = 0.001;
+
+        double e = Math.abs(rk4 - rk5);
+        if (e > eMax && oldStep > stepMin){
+            return oldStep / 2.0;
+        } else if (e < eMin){
+            return  2 * oldStep;
+        } else {
+            return oldStep;
+        }
+    }
     private static double calculateNewStep(double oldStep, double err, double rk4, double rk5){
         double s = Math.pow((err * oldStep) / (2 * Math.abs(rk5 - rk4)), 0.25);
         double newStep = oldStep * s;
