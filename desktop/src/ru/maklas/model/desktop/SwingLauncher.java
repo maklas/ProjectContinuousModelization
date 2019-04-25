@@ -100,9 +100,10 @@ public class SwingLauncher extends JFrame {
                     "    cured' = b * sick;\n" +
                     "\n" +
                     "Params\n" +
-                    "    method = euler\n" +
+                    "    method = rk45\n" +
                     "    span = [0, 50];\n" +
                     "    step = 0.5;\n" +
+                    "    error = 0.005;\n" +
                     "    x0 = [620, 10, 70];\n" +
                     "    plot = [susc', sick', cured'];");
             inputComponent.dispatchEvent(new ActionEvent(split, 0, "click"));

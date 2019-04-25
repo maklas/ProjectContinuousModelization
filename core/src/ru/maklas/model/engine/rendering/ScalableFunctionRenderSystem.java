@@ -84,14 +84,16 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
 
         Gdx.gl.glLineWidth(1);
         sr.begin(ShapeRenderer.ShapeType.Line);
+        float leftX = Utils.camLeftX(cam);
+        float rightX = Utils.camRightX(cam);
+        float botY = Utils.camBotY(cam);
+        float topY = Utils.camTopY(cam);
+        float trueBotY = (float) (botY * yScale);
+        float trueTopY = (float) (topY * yScale);
+        float xAxis = MathUtils.clamp(0, leftX + cam.zoom, rightX);
+        float yAxis = MathUtils.clamp(0, botY + cam.zoom, topY);
 
         if (drawAxis){
-            float leftX = Utils.camLeftX(cam);
-            float rightX = Utils.camRightX(cam);
-            float botY = Utils.camBotY(cam);
-            float topY = Utils.camTopY(cam);
-            float trueBotY = (float) (botY * yScale);
-            float trueTopY = (float) (topY * yScale);
 
             if (drawPortions){
                 sr.setColor(axisColor);
@@ -101,30 +103,26 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
                 int logFloor = (int) (log > 0 ? Math.floor(log) : Math.ceil(log));
                 double portionStep = Math.pow(10, logFloor - 1) * (log - logFloor > 0.5f ? 1 : 0.5f);
 
-                if (topY > -portionThickness && botY < portionThickness) {
-                    double xStart = (Math.ceil(leftX / portionStep) * portionStep);
-                    while (xStart < rightX){
-                        float x = (float) xStart;
-                        sr.line(x, -portionThickness, x, portionThickness);
-                        xStart += portionStep;
-                    }
+                double xStart = (Math.ceil(leftX / portionStep) * portionStep);
+                while (xStart < rightX){
+                    float x = (float) xStart;
+                    sr.line(x, -portionThickness + yAxis, x, portionThickness + yAxis);
+                    xStart += portionStep;
                 }
 
                 portionStep *= yScale;
 
-                if (rightX > -portionThickness && leftX < portionThickness) {
-                    double yStart = (Math.ceil(trueBotY / portionStep) * portionStep);
-                    while (yStart < trueTopY){
-                        float y = (float) (yStart / yScale);
-                        sr.line(-portionThickness, y, portionThickness, y);
-                        yStart += portionStep;
-                    }
+                double yStart = (Math.ceil(trueBotY / portionStep) * portionStep);
+                while (yStart < trueTopY){
+                    float y = (float) (yStart / yScale);
+                    sr.line(-portionThickness + xAxis, y, portionThickness + xAxis, y);
+                    yStart += portionStep;
                 }
             }
 
             sr.setColor(axisColor);
-            sr.line(leftX, 0, rightX, 0);
-            sr.line(0, botY, 0, topY);
+            sr.line(leftX, yAxis, rightX, yAxis);
+            sr.line(xAxis, botY, xAxis, topY);
         }
 
         float currentLineWidth = 1f;
@@ -164,12 +162,6 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
 
         boolean rbp = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
         if (drawAxis && (drawNumbers || xAxisName != null || yAxisName != null || rbp)){
-            float leftX = Utils.camLeftX(cam);
-            float rightX = Utils.camRightX(cam);
-            float botY = Utils.camBotY(cam);
-            float topY = Utils.camTopY(cam);
-            float trueBotY = (float) (botY * yScale);
-            float trueTopY = (float) (topY * yScale);
 
             batch.begin();
             font.setColor(numberColor);
@@ -177,35 +169,30 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
             if (drawNumbers) {
                 font.getData().setScale(cam.zoom * 0.75f);
 
-                float portionThickness = cam.zoom * 4;
                 float minDelta = Math.min(rightX - leftX, topY - botY);
                 double log = Math.log10(minDelta);
                 int logFloor = (int) (log > 0 ? Math.floor(log) : Math.ceil(log));
                 double portionStep = Math.pow(10, logFloor) * (log - logFloor > 0.5f ? 1 : 0.5f);
 
-                if (topY > -portionThickness && botY < portionThickness) {
-                    double xStart = (Math.ceil(leftX / portionStep) * portionStep);
-                    while (xStart < rightX) {
-                        float x = (float) xStart;
+                double xStart = (Math.ceil(leftX / portionStep) * portionStep);
+                while (xStart < rightX) {
+                    float x = (float) xStart;
 
-                        String number = log > 0.5d ? Long.toString(Math.round(xStart)) : StringUtils.df(xStart, -(logFloor - 1));
-                        font.draw(batch, number, x + 2 * cam.zoom, 15 * cam.zoom, 10, Align.left, false);
-                        xStart += portionStep;
-                    }
+                    String number = log > 0.5d ? Long.toString(Math.round(xStart)) : StringUtils.df(xStart, -(logFloor - 1));
+                    font.draw(batch, number, x + 2 * cam.zoom, yAxis + (cam.position.y > 0 ? 15 : -5) * cam.zoom, 10, Align.left, false);
+                    xStart += portionStep;
                 }
 
                 portionStep *= yScale;
 
-                if (rightX > -portionThickness && leftX < portionThickness) {
-                    double yStart = (Math.ceil(trueBotY / portionStep) * portionStep);
-                    while (yStart < trueTopY) {
-                        float y = (float) (yStart / yScale);
-                        if (!MathUtils.isEqual(y, 0)) {
-                            String number = log > 0.5d ? Long.toString(Math.round(yStart)) : StringUtils.df(yStart, -(logFloor - 1));
-                            font.draw(batch, number, 5 * cam.zoom, y + 15 * cam.zoom, 10, Align.left, false);
-                        }
-                        yStart += portionStep;
+                double yStart = (Math.ceil(trueBotY / portionStep) * portionStep);
+                while (yStart < trueTopY) {
+                    float y = (float) (yStart / yScale);
+                    if (!MathUtils.isEqual(y, 0)) {
+                        String number = log > 0.5d ? Long.toString(Math.round(yStart)) : StringUtils.df(yStart, -(logFloor - 1));
+                        font.draw(batch, number, xAxis + (cam.position.x > 0 ? 6 : -6 -5.8f * number.length()) * cam.zoom, y + 15 * cam.zoom, 10, Align.left, false);
                     }
+                    yStart += portionStep;
                 }
 
             }

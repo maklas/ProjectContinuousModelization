@@ -177,6 +177,7 @@ public class FunctionGraphState extends AbstractEngineState {
     @Override
     public void resize(int width, int height) {
         cam.setToOrtho(width, height);
+        doScaleAndPosition();
     }
 
     @Override

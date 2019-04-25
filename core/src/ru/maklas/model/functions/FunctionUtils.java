@@ -79,11 +79,11 @@ public class FunctionUtils {
         Vector2 min = new Vector2(0, Float.MAX_VALUE);
         Vector2 max = new Vector2(0, Float.MIN_VALUE);
         for (Vector2 p : f) {
-            if (p.y > max.y){
+            if (p.y >= max.y){
                 max.x = p.x;
                 max.y = p.y;
             }
-            if (p.y < min.y){
+            if (p.y <= min.y){
                 min.x = p.x;
                 min.y = p.y;
             }
