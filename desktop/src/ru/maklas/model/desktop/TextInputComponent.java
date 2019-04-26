@@ -1,16 +1,11 @@
 package ru.maklas.model.desktop;
 
 import com.badlogic.gdx.utils.Array;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.Token;
-import org.fife.ui.rsyntaxtextarea.TokenTypes;
+import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
-import ru.maklas.model.logic.TokenType;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 public class TextInputComponent extends JPanel {
 
@@ -39,19 +34,14 @@ public class TextInputComponent extends JPanel {
     public void highlightError(ru.maklas.model.logic.Token mToken){
 
         try {
-            int start = mToken.getStart();
-            int end = mToken.getEnd();
-            rSyntaxTextArea.setCaretPosition(mToken.getGlobalOffset() + mToken.getStart());
+            rSyntaxTextArea.setCaretPosition(mToken.getSourceOffset());
             Array<Token> arr = new Array<>();
-            Token t = rSyntaxTextArea.getTokenListForLine(mToken.getLineNumber() - 1);
-            int lineOff = t.getOffset();
-            while (t != null && t.getType() != TokenTypes.NULL){
-                int tStart = t.getOffset() - lineOff;
-                int tEnd = t.getEndOffset() - lineOff;
-                if ((tStart > start && tStart < end) || (tEnd > start && tEnd < end)){
+            Token t = rSyntaxTextArea.getTokenListFor(mToken.getSourceOffset(), mToken.getSourceOffset() + mToken.getLength());
+            if (t != null && t.getType() != TokenTypes.NULL){
+                do {
                     arr.add(t);
-                }
-                t = t.getNextToken();
+                    t = t.getNextToken();
+                } while (t != null && t.getType() != TokenTypes.NULL);
             }
             for (Token token : arr) {
                 changes.add(new TokenChange(token, token.getType()));

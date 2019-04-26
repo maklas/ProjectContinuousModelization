@@ -30,7 +30,7 @@ public class Equation {
     }
 
     public Token getExpressionAsToken() {
-        return new Token(TokenType.expression, expression.first().getGlobalOffset(), name.getLine(), name.getLineNumber(), expression.first().getStart(), expression.last().getEnd());
+        return new Token(TokenType.expression, expression.first().getSourceLineOffset(), name.getLine(), name.getLineNumber(), expression.first().getStart(), expression.last().getEnd());
     }
 
     public Expression getCompiledExpression() {

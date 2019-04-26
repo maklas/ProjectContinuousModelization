@@ -339,6 +339,7 @@ public class Compiler {
                     expectToken(valueStart + 2, tokens, TokenType.comma, "','", tokens.get(valueStart - 1));
                     expectToken(valueStart + 3, tokens, TokenType.number, "span end", tokens.get(valueStart - 1));
                     expectToken(valueStart + 4, tokens, "]", "']'", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 5, tokens, TokenType.end, "end of " + paramName + " declaration", tokens.get(valueStart + 4));
                     model.setSpanStart(tokens.get(valueStart + 1));
                     model.setSpanEnd(tokens.get(valueStart + 3));
                     i = valueStart + 5;
@@ -458,7 +459,7 @@ public class Compiler {
         if (code == null) return null;
         String[] lines = code.split("\r?\n");
 
-        int globalOffset = 0;
+        int lineOffset = 0;
         Array<Token> tokens = new Array<>();
         for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
             String line = lines[lineIndex];
@@ -466,19 +467,22 @@ public class Compiler {
             if (commentaryStart >= 0){
                 line = line.substring(0, commentaryStart);
             }
-            if (StringUtils.isBlank(line)) continue;
+            if (StringUtils.isBlank(line)) {
+                lineOffset += lines[lineIndex].length() + 1;
+                continue;
+            }
             Matcher matcher = forbiddenSymbolsPattern.matcher(line);
             if (matcher.find()){
                 throw new EvaluationException("Invalid symbol at line " + (lineIndex + 1) + ", col " + matcher.start() +": '" + matcher.group() + "'");
             }
-            tokenize(line, globalOffset, lineIndex + 1, tokens);
-            globalOffset += lines[lineIndex].length() + 1;
+            tokenize(line, lineOffset, lineIndex + 1, tokens);
+            lineOffset += lines[lineIndex].length() + 1;
         }
         return tokens;
     }
 
     /** Parse and add tokens**/
-    private static void tokenize(String line, int globalOffset, int lineNumber, Array<Token> tokens) throws EvaluationException {
+    private static void tokenize(String line, int sourceOffset, int lineNumber, Array<Token> tokens) throws EvaluationException {
         Matcher matcher = tokenizingPattern.matcher(line);
 
         while (matcher.find()){
@@ -524,12 +528,12 @@ public class Compiler {
                 throw EvaluationException.invalidTokenException(group);
             }
             if (type == TokenType.end && tokens.size > 0 && tokens.last().getType() == TokenType.end) continue;
-            Token token = new Token(type, globalOffset, line, lineNumber, matcher.start(), matcher.end());
+            Token token = new Token(type, sourceOffset, line, lineNumber, matcher.start(), matcher.end());
 
             tokens.add(token);
         }
         if (tokens.size > 0 && tokens.last().getType() != TokenType.end)
-        tokens.add(new Token(TokenType.end, globalOffset, line, lineNumber, line.length() - 1, line.length() - 1));
+        tokens.add(new Token(TokenType.end, sourceOffset, line, lineNumber, line.length() - 1, line.length() - 1));
     }
 
 }

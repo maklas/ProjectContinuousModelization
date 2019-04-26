@@ -3,16 +3,20 @@ package ru.maklas.model.logic;
 public class Token {
 
     private final TokenType type;
-    private final int globalOffset; //Offset of the line
     private final String line;
+    /** Start position of the line of this token in the source code **/
+    private final int sourceLineOffset;
+    /** Line number, relative to the source code **/
     private final int lineNumber;
+    /** Start in it's line **/
     private final int start;
+    /** End position in it's line **/
     private final int end;
     private String valueCache = null;
 
-    public Token(TokenType type, int globalOffset, String line, int lineNumber, int start, int end) {
+    public Token(TokenType type, int sourceLineOffset, String line, int lineNumber, int start, int end) {
         this.type = type;
-        this.globalOffset = globalOffset;
+        this.sourceLineOffset = sourceLineOffset;
         this.line = line;
         this.lineNumber = lineNumber;
         this.start = start;
@@ -33,6 +37,10 @@ public class Token {
 
     public int getStart() {
         return start;
+    }
+
+    public int getLength(){
+        return end - start;
     }
 
     public int getEnd() {
@@ -73,7 +81,11 @@ public class Token {
         return "line " + lineNumber + ", column " + start;
     }
 
-    public int getGlobalOffset() {
-        return globalOffset;
+    public int getSourceLineOffset() {
+        return sourceLineOffset;
+    }
+
+    public int getSourceOffset(){
+        return sourceLineOffset + start;
     }
 }
