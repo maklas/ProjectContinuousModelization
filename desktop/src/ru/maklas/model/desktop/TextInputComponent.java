@@ -10,7 +10,6 @@ import java.awt.*;
 public class TextInputComponent extends JPanel {
 
     private final RSyntaxTextArea rSyntaxTextArea;
-    private Array<TokenChange> changes = new Array<>();
 
     public TextInputComponent() {
         super(new BorderLayout());
@@ -18,9 +17,9 @@ public class TextInputComponent extends JPanel {
         rSyntaxTextArea.setSyntaxEditingStyle("text/plain");
         RTextScrollPane scrollPane = new RTextScrollPane(rSyntaxTextArea);
         add(scrollPane, BorderLayout.CENTER);
+        rSyntaxTextArea.setFont(rSyntaxTextArea.getFont().deriveFont(16f));
         rSyntaxTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).underline = true;
         rSyntaxTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).foreground = Color.RED;
-        rSyntaxTextArea.setFont(rSyntaxTextArea.getFont().deriveFont(16f));
     }
 
     public void setText(String text){
@@ -32,9 +31,9 @@ public class TextInputComponent extends JPanel {
     }
 
     public void highlightError(ru.maklas.model.logic.Token mToken){
-
         try {
-            rSyntaxTextArea.setCaretPosition(mToken.getSourceOffset());
+            rSyntaxTextArea.getCaret().setDot(mToken.getSourceOffset());
+            rSyntaxTextArea.getCaret().moveDot(mToken.getSourceOffset() + mToken.getLength());
             Array<Token> arr = new Array<>();
             Token t = rSyntaxTextArea.getTokenListFor(mToken.getSourceOffset(), mToken.getSourceOffset() + mToken.getLength());
             if (t != null && t.getType() != TokenTypes.NULL){
@@ -44,21 +43,16 @@ public class TextInputComponent extends JPanel {
                 } while (t != null && t.getType() != TokenTypes.NULL);
             }
             for (Token token : arr) {
-                changes.add(new TokenChange(token, token.getType()));
-                token.setType(TokenTypes.ERROR_IDENTIFIER);
+                token.setType(TokenTypes.ERROR_STRING_DOUBLE);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        rSyntaxTextArea.invalidate();
     }
 
     public void clearErrors(){
-        try {
-            changes.foreach(t -> t.t.setType(t.oldType));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        changes.clear();
+
     }
 
     private static class TokenChange {

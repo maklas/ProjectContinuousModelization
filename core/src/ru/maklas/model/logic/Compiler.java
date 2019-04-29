@@ -136,7 +136,13 @@ public class Compiler {
                 }
 
                 if (!found){
-                    throw new EvaluationException("Undefined variable or equation '" + variable + "'", equation.getExpressionAsToken());
+                    int index = equation.getFullEquation().indexOf(variable);
+                    if (index > 0){
+                        int start = index + equation.getExpressionAsToken().getStart();
+                        throw new EvaluationException("Undefined variable or equation '" + variable + "'", new Token(TokenType.word, equation.getName().getSourceLineOffset(), equation.getName().getLine(), equation.getName().getLineNumber(), start, start + variable.length()));
+                    } else {
+                        throw new EvaluationException("Undefined variable or equation '" + variable + "'", equation.getExpressionAsToken());
+                    }
                 }
             }
         }
