@@ -98,9 +98,22 @@ public class Compiler {
             expression = new Expression(expressionString);
             if (!expression.checkLexSyntax()){
                 System.err.println(expression.getErrorMessage());
-                throw new EvaluationException("Syntax error", expressionToken);
-            }
+                Token errorToken;
+                if (expression.getErrorMessage() != null && expression.getErrorMessage().contains("column")){
+                    Matcher matcher = Pattern.compile("column (\\d+)\\.").matcher(expression.getErrorMessage());
+                    if (matcher.find()) {
 
+                        int start = Integer.parseInt(matcher.group(1)) + expressionToken.getStart() - 1;
+                        int end = start + 1;
+                        errorToken = new Token(TokenType.expression, expressionToken.getSourceLineOffset(), expressionToken.getLine(), expressionToken.getLineNumber(), start, end);
+                    } else {
+                        errorToken = expressionToken;
+                    }
+                } else {
+                    errorToken = expressionToken;
+                }
+                throw new EvaluationException("Syntax error", errorToken);
+            }
             equation.setCompiledExpression(expression);
         }
 
@@ -136,7 +149,6 @@ public class Compiler {
             }
 
         }
-
 
         //MODEL
         if (model.getMethod() == null){

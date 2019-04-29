@@ -4,9 +4,9 @@ public class Token {
 
     private final TokenType type;
     private final String line;
-    /** Start position of the line of this token in the source code **/
+    /** Start position of the LINE of this token in the source code **/
     private final int sourceLineOffset;
-    /** Line number, relative to the source code **/
+    /** Line number, relative to the source code. Starts from 1 **/
     private final int lineNumber;
     /** Start in it's line **/
     private final int start;
