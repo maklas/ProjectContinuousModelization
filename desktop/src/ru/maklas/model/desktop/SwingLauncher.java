@@ -100,7 +100,7 @@ public class SwingLauncher extends JFrame {
                     "    cured' = b * sick;\n" +
                     "\n" +
                     "Params\n" +
-                    "    method = rk45\n" +
+                    "    method = rk4\n" +
                     "    span = [0, 50];\n" +
                     "    step = 0.5;\n" +
                     "    error = 0.005;\n" +

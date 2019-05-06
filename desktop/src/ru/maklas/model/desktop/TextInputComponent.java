@@ -2,67 +2,75 @@ package ru.maklas.model.desktop;
 
 import com.badlogic.gdx.utils.Array;
 import org.fife.ui.rsyntaxtextarea.*;
+import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.DefaultHighlighter;
 import java.awt.*;
 
 public class TextInputComponent extends JPanel {
 
-    private final RSyntaxTextArea rSyntaxTextArea;
+    private final RTextArea rTextArea;
+    private DefaultHighlighter highlighter;
+    private Array<Object> tags = new Array<>();
 
     public TextInputComponent() {
         super(new BorderLayout());
-        rSyntaxTextArea = new RSyntaxTextArea(20, 10);
-        rSyntaxTextArea.setSyntaxEditingStyle("text/plain");
-        RTextScrollPane scrollPane = new RTextScrollPane(rSyntaxTextArea);
+        rTextArea = new RTextArea(20, 10);
+        //rTextArea.setSyntaxEditingStyle("text/plain");
+        RTextScrollPane scrollPane = new RTextScrollPane(rTextArea);
         add(scrollPane, BorderLayout.CENTER);
-        rSyntaxTextArea.setFont(rSyntaxTextArea.getFont().deriveFont(16f));
-        rSyntaxTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).underline = true;
-        rSyntaxTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).foreground = Color.RED;
+        rTextArea.setFont(rTextArea.getFont().deriveFont(16f));
+        //rTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).underline = true;
+        //rTextArea.getSyntaxScheme().getStyle(Token.ERROR_IDENTIFIER).foreground = Color.RED;
+        highlighter = new DefaultHighlighter();
+        rTextArea.setHighlighter(highlighter);
+        rTextArea.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                clearErrors();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
     }
 
     public void setText(String text){
-        rSyntaxTextArea.setText(text);
+        rTextArea.setText(text);
     }
 
     public String getText(){
-        return rSyntaxTextArea.getText();
+        return rTextArea.getText();
     }
 
     public void highlightError(ru.maklas.model.logic.Token mToken){
         try {
-            rSyntaxTextArea.getCaret().setDot(mToken.getSourceOffset());
-            rSyntaxTextArea.getCaret().moveDot(mToken.getSourceOffset() + mToken.getLength());
-            Array<Token> arr = new Array<>();
-            Token t = rSyntaxTextArea.getTokenListFor(mToken.getSourceOffset(), mToken.getSourceOffset() + mToken.getLength());
-            if (t != null && t.getType() != TokenTypes.NULL){
-                do {
-                    arr.add(t);
-                    t = t.getNextToken();
-                } while (t != null && t.getType() != TokenTypes.NULL);
-            }
-            for (Token token : arr) {
-                token.setType(TokenTypes.ERROR_STRING_DOUBLE);
-            }
+            int start = mToken.getSourceOffset();
+            int end = mToken.getSourceOffset() + mToken.getLength();
+            //rTextArea.getCaret().setDot(start);
+            //rTextArea.getCaret().moveDot(end);
+            Object tag = highlighter.addHighlight(start, end, new SquiggleUnderlineHighlightPainter(Color.RED));
+            tags.add(tag);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        rSyntaxTextArea.invalidate();
+        rTextArea.invalidate();
     }
 
     public void clearErrors(){
-
-    }
-
-    private static class TokenChange {
-        Token t;
-        int oldType;
-
-        public TokenChange(Token t, int oldType) {
-            this.t = t;
-            this.oldType = oldType;
-        }
+        highlighter.removeAllHighlights();
+        tags.clear();
     }
 
 }

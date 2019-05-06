@@ -114,6 +114,8 @@ public class Compiler {
                 }
                 throw new EvaluationException("Syntax error", errorToken);
             }
+
+            validateExpression(expressionToken, expressionString);
             equation.setCompiledExpression(expression);
         }
 
@@ -247,6 +249,14 @@ public class Compiler {
             }
         }
 
+
+    }
+
+    private static void validateExpression(Token expressionToken, String expression) throws EvaluationException {
+        Matcher matcher = Pattern.compile("[+\\-*/^][\\s]*([+*/^])").matcher(expression);
+        if (matcher.find()){
+            throw new EvaluationException("Arithmetic Error. Two signs in a row.", new Token(TokenType.word, expressionToken.getSourceLineOffset(), expressionToken.getLine(), expressionToken.getLineNumber(), expressionToken.getStart() + matcher.start(), expressionToken.getStart() + matcher.end()));
+        }
 
     }
 
