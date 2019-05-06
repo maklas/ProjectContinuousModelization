@@ -41,7 +41,7 @@ public class TextInputComponent extends JPanel {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-
+                clearErrors();
             }
         });
     }

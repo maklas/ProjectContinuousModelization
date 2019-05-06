@@ -28,7 +28,7 @@ public abstract class BaseMethod implements Method {
         environment.put(hasX ? "t" : "x", xArg);
 
         Argument[] arguments = environment.values().toArray().toArray(Argument.class);
-        Array<Function> functions = model.getEquations().map(e -> new Function(e.getPureEquationName(), e.getCompiledExpression()));
+        Array<Function> functions = model.getEquations().map(e -> createFunction(e.getPureEquationName(), e.getCompiledExpression()));
         for (Function function : functions) {
             function.expression.removeAllArguments();
             function.expression.addArguments(arguments);
@@ -45,6 +45,10 @@ public abstract class BaseMethod implements Method {
         iterate(xArg, start, end, model.getStep().getAsDouble(), environment, functions, model);
 
         return functions.map(e -> e.points);
+    }
+
+    protected Function createFunction(String name, Expression expression){
+        return new Function(name, expression);
     }
 
 
