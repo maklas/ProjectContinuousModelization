@@ -21,7 +21,7 @@ public class Compiler {
     private static final Pattern tokenizingPattern = Pattern.compile(wordPattern.pattern() + "|" + numberPattern.pattern() + "|\\[|]|;|\\*|/|\\+|-|=|,|\\(|\\)|\\^");
     private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\s\\w\\-+.*/^',()\\\\_;=\\[]]");
     private static final Array<String> headers = Array.with("program", "var", "equations", "params");
-    private static final Array<String> methods = Array.with("euler", "rk4", "rk45");
+    private static final Array<String> methods = Array.with("euler", "rk4", "rk45", "rkf");
 
     public static Model compile(String text) throws EvaluationException {
         Array<Token> tokens = tokenize(text);

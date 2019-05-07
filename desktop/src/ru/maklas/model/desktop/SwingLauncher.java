@@ -23,6 +23,8 @@ import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.logic.model.Plot;
 import ru.maklas.model.mnw.MNW;
 import ru.maklas.model.states.FunctionGraphState;
+import ru.maklas.model.utils.Log;
+import ru.maklas.model.utils.StringUtils;
 import ru.maklas.model.utils.gsm_lib.GSMClearAndSet;
 
 import javax.swing.*;
@@ -59,7 +61,10 @@ public class SwingLauncher extends JFrame {
             String text = inputComponent.getText();
             Model model;
             try {
+                long start = System.nanoTime();
                 model = Compiler.compile(text);
+                long end = System.nanoTime();
+                Log.trace("Model created. Time: " + StringUtils.dfSigDigits((end - start) / 1000.0, 2, 3)  + " us");
                 Array<Entity> entities = convertToEntities(model);
                 Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, model.getSpanStart().getAsDouble(), model.getSpanEnd().getAsDouble()))));
                 SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
@@ -113,18 +118,12 @@ public class SwingLauncher extends JFrame {
     private static Array<Entity> convertToEntities(Model model) throws Exception {
         Array<Entity> entities = new Array<>();
 
-        Method method;
-        if (model.getMethod().getTextValue().equalsIgnoreCase("euler")){
-            method = new Euler();
-        } else if (model.getMethod().getTextValue().equalsIgnoreCase("rk4")){
-            method = new RungeKutta4();
-        } else if (model.getMethod().getTextValue().equalsIgnoreCase("rk45")){
-            method = new RungeKutta45();
-        } else {
-            throw new RuntimeException("Unknown method: " + model.getMethod().getTextValue());
-        }
+        Method method = getMethod(model.getMethod().getTextValue());
 
+        long start = System.currentTimeMillis();
         Array<Array<Vector2>> functions = method.solve(model);
+        long end = System.currentTimeMillis();
+        Log.trace("Method " + model.getMethod().getTextValue() + ". Time: " + (end - start) + " ms. Points: " + (functions.size == 0 ? 0 : functions.get(0).size));
 
         for (int i = 0; i < model.getEquations().size; i++) {
             if (!model.getPlots().isEmpty()) {
@@ -190,6 +189,18 @@ public class SwingLauncher extends JFrame {
         }
 
         return entities;
+    }
+    
+    private static Method getMethod(String name){
+        if (name.equalsIgnoreCase("euler")){
+            return new Euler();
+        } else if (name.equalsIgnoreCase("rk4")){
+            return new RungeKutta4();
+        } else if (name.equalsIgnoreCase("rk45") || name.equalsIgnoreCase("rkf")){
+            return new RungeKutta45();
+        } else {
+            throw new RuntimeException("Unknown method: " + name);
+        }
     }
 
     private static boolean equals(Token equationName, Token plotName){
