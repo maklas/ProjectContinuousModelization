@@ -201,7 +201,7 @@ public class Compiler {
             throw new EvaluationException("Span must be bigger than step");
         }
         //STEP-ERROR
-        if ("rk45".equalsIgnoreCase(model.getMethod().getTextValue()) && model.getError() == null){
+        if (("rkf".equalsIgnoreCase(model.getMethod().getTextValue()) ||"rk45".equalsIgnoreCase(model.getMethod().getTextValue())) && model.getError() == null){
             throw new EvaluationException("No step error specified for Runge-kutta with variable step method");
         }
         //DEFAULTS

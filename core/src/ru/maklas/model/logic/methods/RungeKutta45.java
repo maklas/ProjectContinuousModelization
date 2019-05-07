@@ -58,6 +58,9 @@ public class RungeKutta45 extends BaseMethod {
                 }
             }
             h = newHMin;
+            if (h > to - x){
+                h = to - x;
+            }
         }
     }
 

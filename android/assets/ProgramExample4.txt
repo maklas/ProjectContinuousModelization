@@ -1,0 +1,15 @@
+Program TankProblem; //http://www.sharetechnote.com/html/DE_Modeling_Example_Mixing.html
+
+Var
+
+Equations
+	x' = -15 * x / 500 + 5 * y / 1000 + 0 * z + 10 * 0.1
+	y' = 15 * x / 500 - 18 * y / 1000 + 3 * z / 400 + 0
+	z' = 0 * x + 14 * y / 1000 - 14 * z / 400 + 0
+
+Params
+    method = rk45
+    span = [0, 10];
+    step = 0.1;
+    error = 0.003;
+    x0 = [0, 0, 0];
