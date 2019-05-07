@@ -6,12 +6,12 @@ public class EvaluationException extends Exception {
     Token token;
 
     public EvaluationException(Token token) {
-        super("Error at " + token.position() + ". ");
+        super("Ошибка на позиции " + token.position() + ".");
         this.token = token;
     }
 
     public EvaluationException(String message, Token token) {
-        super("Error at " + token.position() + ". " + message);
+        super("Ошибка на позиции " + token.position() + ". " + message);
         this.token = token;
     }
 
@@ -24,10 +24,10 @@ public class EvaluationException extends Exception {
     }
 
     public static EvaluationException invalidTokenException(String value){
-        return new EvaluationException("Invalid token '" + value + "'");
+        return new EvaluationException("Не корректный токен '" + value + "'");
     }
 
     public static EvaluationException unexpected(Token token){
-        return new EvaluationException("Unexpected token '" + token.getTextValue() + "'", token);
+        return new EvaluationException("Неожиданный токен '" + token.getTextValue() + "'", token);
     }
 }

@@ -26,7 +26,7 @@ public class Compiler {
     public static Model compile(String text) throws EvaluationException {
         Array<Token> tokens = tokenize(text);
         int lastHeaderIndex = getNextHeaderIndex(tokens, 0);
-        if (lastHeaderIndex != 0) throw new EvaluationException("Program must start with a header. Ex: Program, Var, Equations, Params", tokens.first());
+        if (lastHeaderIndex != 0) throw new EvaluationException("Программа должна начинаться с заголовка. Например: Program, Var, Equations, Params", tokens.first());
 
         Model model = new Model();
         model.setSource(text);
@@ -40,20 +40,20 @@ public class Compiler {
             if (token.getType() == TokenType.header){
                 end = i - 1;
                 if (end < start){
-                    throw new EvaluationException("Header content is empty", header);
+                    throw new EvaluationException("Пустой заголовок", header);
                 }
                 parseHeader(header, tokens, start, end, model);
                 parsedHeaders.add(header.getTextValue().toLowerCase());
                 start = i + 1;
                 header = token;
                 if (parsedHeaders.contains(header.getTextValue().toLowerCase(), false)){
-                    throw new EvaluationException("Header " + header.getTextValue() + " was already declared", header);
+                    throw new EvaluationException("Заголовок " + header.getTextValue() + " Уже был указан", header);
                 }
             }
         }
         end = tokens.size - 1;
         if (end < start){
-            throw new EvaluationException("Header content is empty", header);
+            throw new EvaluationException("Пустой заголовок", header);
         }
         parseHeader(header, tokens, start, end, model);
         validateModel(model);
@@ -67,7 +67,7 @@ public class Compiler {
         for (int i = 0; i < vars.size; i++) {
             for (int j = 0; j < i; j++) {
                 if (vars.get(i).getName().getTextValue().equals(vars.get(j).getName().getTextValue())){
-                    throw new EvaluationException("Variable with name '" + vars.get(i).getName().getTextValue() + "' was already declared", vars.get(i).getName());
+                    throw new EvaluationException("Переменная с именем '" + vars.get(i).getName().getTextValue() + "' Уже была объявлена", vars.get(i).getName());
                 }
             }
         }
@@ -76,17 +76,17 @@ public class Compiler {
             try {
                 var.getValue().getAsDouble();
             } catch (Exception e) {
-                throw new EvaluationException("A variable value must be a number", var.getValue());
+                throw new EvaluationException("Значение переменной должно быть численным значением", var.getValue());
             }
         }
 
         //EQUATIONS
         Array<Equation> equations = model.getEquations();
-        if (equations.isEmpty()) throw new EvaluationException("No equations defined");
+        if (equations.isEmpty()) throw new EvaluationException("Функции не объявлены");
         for (int i = 0; i < equations.size; i++) {
             for (int j = 0; j < i; j++) {
                 if (equations.get(i).getPureEquationName().equals(equations.get(j).getPureEquationName())){
-                    throw new EvaluationException("Equation with name '" + equations.get(i).getName().getTextValue() + "' was already declared", equations.get(i).getName());
+                    throw new EvaluationException("Функция '" + equations.get(i).getName().getTextValue() + "' Уже была объявлена", equations.get(i).getName());
                 }
             }
         }
@@ -112,7 +112,7 @@ public class Compiler {
                 } else {
                     errorToken = expressionToken;
                 }
-                throw new EvaluationException("Syntax error", errorToken);
+                throw new EvaluationException("Синтаксическая ошибка", errorToken);
             }
 
             validateExpression(expressionToken, expressionString);
@@ -141,9 +141,9 @@ public class Compiler {
                     int index = equation.getFullEquation().indexOf(variable);
                     if (index > 0){
                         int start = index + equation.getExpressionAsToken().getStart();
-                        throw new EvaluationException("Undefined variable or equation '" + variable + "'", new Token(TokenType.word, equation.getName().getSourceLineOffset(), equation.getName().getLine(), equation.getName().getLineNumber(), start, start + variable.length()));
+                        throw new EvaluationException("Неизвестная переменная '" + variable + "'", new Token(TokenType.word, equation.getName().getSourceLineOffset(), equation.getName().getLine(), equation.getName().getLineNumber(), start, start + variable.length()));
                     } else {
-                        throw new EvaluationException("Undefined variable or equation '" + variable + "'", equation.getExpressionAsToken());
+                        throw new EvaluationException("\"Неизвестная переменная '" + variable + "'", equation.getExpressionAsToken());
                     }
                 }
             }
@@ -152,7 +152,7 @@ public class Compiler {
         for (Equation equation : equations) {
             for (Var var : vars) {
                 if (var.getName().getTextValue().equals(equation.getPureEquationName())){
-                    throw new EvaluationException("Equation has the same name as one of the variables", equation.getName());
+                    throw new EvaluationException("Функция имеет такое же название как одна из переменных", equation.getName());
                 }
             }
 
@@ -160,62 +160,62 @@ public class Compiler {
 
         //MODEL
         if (model.getMethod() == null){
-            throw new EvaluationException("Method is not defined. Specify method in params");
+            throw new EvaluationException("Не указан метод интегрирования. Укажите в Params");
         }
         if (!methods.contains(model.getMethod().getTextValue(), false)){
-            throw new EvaluationException("Undefined method. Valid methods are: " + methods.toString(", "), model.getMethod());
+            throw new EvaluationException("Не известный метод интегрирования (" + model.getMethod().getTextValue() + "). Возможные методы: " + methods.toString(", "), model.getMethod());
         }
         //SPAN
         if (model.getSpanStart() == null || model.getSpanEnd() == null){
-            throw new EvaluationException("Span not defined. Specify span in params");
+            throw new EvaluationException("Не указан диапозон интегрирования. укажите диапозон (span) в Params");
         }
         double spanStart;
         double spanEnd;
         try {
             spanStart = model.getSpanStart().getAsDouble();
         } catch (Exception e) {
-            throw new EvaluationException("Invalid span start", model.getSpanStart());
+            throw new EvaluationException("Некорректное начало диапозона интегрирования", model.getSpanStart());
         }
         try {
             spanEnd = model.getSpanEnd().getAsDouble();
         } catch (Exception e) {
-            throw new EvaluationException("Invalid span end", model.getSpanStart());
+            throw new EvaluationException("Некорректный конец диапозона интегрирования", model.getSpanStart());
         }
         if (spanEnd <= spanStart){
-            throw new EvaluationException("Span end should never be less than span start", model.getSpanEnd());
+            throw new EvaluationException("Конец диапозона интегрировнаия не должен быть раньше начала", model.getSpanEnd());
         }
         if (model.getStep() == null){
-            throw new EvaluationException("Step not defined. Specify step in params");
+            throw new EvaluationException("Не указан шаг интегрирования. Укажите шаг (step) в Params");
         }
         //STEP
         double step;
         try {
             step = model.getStep().getAsDouble();
         } catch (Exception e) {
-            throw new EvaluationException("Invalid step", model.getStep());
+            throw new EvaluationException("Некорректный шаг интегрирования", model.getStep());
         }
         if (step <= 0){
-            throw new EvaluationException("Step must be positive number", model.getStep());
+            throw new EvaluationException("Шаг интегрирования должен быть положительным числом", model.getStep());
         }
         if (spanEnd - spanStart < step){
-            throw new EvaluationException("Span must be bigger than step");
+            throw new EvaluationException("Диапозон интегрирования должен быть больше шага интегрирования");
         }
         //STEP-ERROR
         if (("rkf".equalsIgnoreCase(model.getMethod().getTextValue()) ||"rk45".equalsIgnoreCase(model.getMethod().getTextValue())) && model.getError() == null){
-            throw new EvaluationException("No step error specified for Runge-kutta with variable step method");
+            throw new EvaluationException("Для метода с плавающим шагом интегрирования необходимо указать погрешность (error) в Params");
         }
         //DEFAULTS
         if (model.getDefaults().size == 0){
-            throw new EvaluationException("x0 initial values are not set");
+            throw new EvaluationException("Не указаны начальные значения функций (x0) в Params");
         }
         if (model.getDefaults().size != model.getEquations().size){
-            throw new EvaluationException("x0 initial values != equation declarations");
+            throw new EvaluationException("Начальный значения (x0) не совпадают с функциями");
         }
         for (Token aDefault : model.getDefaults()) {
             try {
                 aDefault.getAsDouble();
             } catch (Exception e) {
-                throw new EvaluationException("A default value must be a number", aDefault);
+                throw new EvaluationException("Начальное значение должно быть числом", aDefault);
             }
         }
 
@@ -229,7 +229,7 @@ public class Compiler {
                 }
             }
             if (!found){
-                throw new EvaluationException("Function not found", plot.getFunctionName());
+                throw new EvaluationException("Функция не найдена", plot.getFunctionName());
             }
 
             Token colorToken = plot.getColorToken();
@@ -243,7 +243,7 @@ public class Compiler {
             } else {
                 Color color = Colors.get(colorToken.getTextValue());
                 if (color == null){
-                    throw new EvaluationException("Unknown color", colorToken);
+                    throw new EvaluationException("Не известный цвет", colorToken);
                 }
                 plot.setColor(color);
             }
@@ -255,7 +255,7 @@ public class Compiler {
     private static void validateExpression(Token expressionToken, String expression) throws EvaluationException {
         Matcher matcher = Pattern.compile("[+\\-*/^][\\s]*([+*/^])").matcher(expression);
         if (matcher.find()){
-            throw new EvaluationException("Arithmetic Error. Two signs in a row.", new Token(TokenType.word, expressionToken.getSourceLineOffset(), expressionToken.getLine(), expressionToken.getLineNumber(), expressionToken.getStart() + matcher.start(), expressionToken.getStart() + matcher.end()));
+            throw new EvaluationException("Синтаксическая ошибка. 2 знака подряд.", new Token(TokenType.word, expressionToken.getSourceLineOffset(), expressionToken.getLine(), expressionToken.getLineNumber(), expressionToken.getStart() + matcher.start(), expressionToken.getStart() + matcher.end()));
         }
 
     }
@@ -266,15 +266,15 @@ public class Compiler {
             if (name.getType() == TokenType.word) {
                 model.setProgramName(name);
             } else {
-                throw new EvaluationException("Invalid program name", name);
+                throw new EvaluationException("Не допустимое название для программы", name);
             }
             if (end > start + 1 && tokens.size > start + 2){
-                throw new EvaluationException("Unexpected token ", tokens.get(start + 2));
+                throw new EvaluationException("Неожиданный токен ", tokens.get(start + 2));
             }
 
         } else if ("var".equalsIgnoreCase(header.getTextValue())){
             if (tokens.get(start).getType() != TokenType.end){
-                throw new EvaluationException("Vars should be declared on the next line", header);
+                throw new EvaluationException("Переменные объявляются на следующей строчке", header);
             }
 
             for (int i = start + 1; i < end + 1; i+=4) {
@@ -294,7 +294,7 @@ public class Compiler {
                 Var var = new Var(tokens.get(i), tokens.get(i + 2));
                 for (Var modelVar : model.getVars()) {
                     if (modelVar.getName().getTextValue().equals(var.getName().getTextValue())){
-                        throw new EvaluationException("Repeated variable name", tokens.get(i));
+                        throw new EvaluationException("Повторяющееся название переменной", tokens.get(i));
                     }
                 }
 
@@ -312,15 +312,15 @@ public class Compiler {
                 if (name == null){
                     name = token;
                     if (name.getType() != TokenType.word){
-                        throw new EvaluationException("Expected equation name.", token);
+                        throw new EvaluationException("Некоректное название функции", token);
                     } else if (!name.getTextValue().endsWith("'")){
-                        throw new EvaluationException("Equation must be differential. Add ' at the end of the name", token);
+                        throw new EvaluationException("Функция должна быть дифференциалом первого порядка. Добавьте значок ' после названия функции", token);
                     }
                 } else if (expression == null){
                     if (token.getType() == TokenType.equals){
                         expression = new Array<>();
                     } else {
-                        throw new EvaluationException("Expected '='", token);
+                        throw new EvaluationException("Ожидалось '='", token);
                     }
                 } else {
                     if (token.getType() == TokenType.end){
@@ -343,31 +343,31 @@ public class Compiler {
                 }
                 Token firstToken = tokens.get(i);
                 if (firstToken.getType() != TokenType.word){
-                    throw new EvaluationException("Unexpected token. Expected parameter name", firstToken);
+                    throw new EvaluationException("Неожиданный токен. Ожидалось название параметра", firstToken);
                 }
                 expectToken(i + 1, tokens, TokenType.equals, "'='", firstToken);
                 String paramName = firstToken.getTextValue();
                 int valueStart = i + 2;
 
                 if ("method".equalsIgnoreCase(paramName)){
-                    expectToken(valueStart, tokens, TokenType.word, "method name", tokens.get(valueStart - 1));
+                    expectToken(valueStart, tokens, TokenType.word, "название метода интегрирования", tokens.get(valueStart - 1));
                     model.setMethod(tokens.get(valueStart));
                     i = valueStart + 1;
                 } else if ("step".equalsIgnoreCase(paramName)){
-                    expectToken(valueStart, tokens, TokenType.number, "number", tokens.get(valueStart - 1));
+                    expectToken(valueStart, tokens, TokenType.number, "число", tokens.get(valueStart - 1));
                     model.setStep(tokens.get(valueStart));
                     i = valueStart + 1;
                 } else if ("error".equalsIgnoreCase(paramName)){
-                    expectToken(valueStart, tokens, TokenType.number, "number", tokens.get(valueStart - 1));
+                    expectToken(valueStart, tokens, TokenType.number, "число", tokens.get(valueStart - 1));
                     model.setError(tokens.get(valueStart));
                     i = valueStart + 1;
                 } else if ("span".equalsIgnoreCase(paramName)){
                     expectToken(valueStart, tokens, "[", "'['", tokens.get(valueStart - 1));
-                    expectToken(valueStart + 1, tokens, TokenType.number, "span start", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 1, tokens, TokenType.number, "начало диапозона", tokens.get(valueStart - 1));
                     expectToken(valueStart + 2, tokens, TokenType.comma, "','", tokens.get(valueStart - 1));
-                    expectToken(valueStart + 3, tokens, TokenType.number, "span end", tokens.get(valueStart - 1));
+                    expectToken(valueStart + 3, tokens, TokenType.number, "конец диапозона", tokens.get(valueStart - 1));
                     expectToken(valueStart + 4, tokens, "]", "']'", tokens.get(valueStart - 1));
-                    expectToken(valueStart + 5, tokens, TokenType.end, "end of " + paramName + " declaration", tokens.get(valueStart + 4));
+                    expectToken(valueStart + 5, tokens, TokenType.end, "Конец декларации " + paramName, tokens.get(valueStart + 4));
                     model.setSpanStart(tokens.get(valueStart + 1));
                     model.setSpanEnd(tokens.get(valueStart + 3));
                     i = valueStart + 5;
@@ -377,29 +377,29 @@ public class Compiler {
                         if (tokens.size >= valueStart + 2 && TokenType.end == tokens.get(valueStart + 2).getType()){
                             i = valueStart + 4;
                         } else {
-                            throw new EvaluationException("Unexpected token after " + paramName + " declaration.", tokens.get(valueStart + 2));
+                            throw new EvaluationException("Неожиданный токен после декларации " + paramName, tokens.get(valueStart + 2));
                         }
                     } else {
                         int pos = valueStart + 1;
                         boolean expNumber = true;
                         while (true) {
                             if (tokens.size <= pos) {
-                                throw new EvaluationException("Unexpected token, don't forget to close array declaration with ']'", tokens.last());
+                                throw new EvaluationException("Неожиданный токен, Не забудьте закрывать объявленные массивы символом ']'", tokens.last());
                             }
                             Token previous = tokens.get(pos - 1);
                             Token token = tokens.get(pos);
                             if (expNumber) {
                                 if (token.getType() != TokenType.number) {
-                                    expectToken(pos, tokens, TokenType.number, "number", previous);
+                                    expectToken(pos, tokens, TokenType.number, "число", previous);
                                 }
                                 model.getDefaults().add(token);
                             } else {
                                 if ("]".equals(token.getTextValue())) {
-                                    expectToken(pos + 1, tokens, TokenType.end, "end of " + paramName + " declaration", token);
+                                    expectToken(pos + 1, tokens, TokenType.end, "конец объявления параметра " + paramName, token);
                                     i = pos + 2;
                                     break;
                                 } else if (token.getType() != TokenType.comma) {
-                                    expectToken(pos, tokens, TokenType.comma, "',' or ']'", previous);
+                                    expectToken(pos, tokens, TokenType.comma, "',' или ']'", previous);
                                 }
                             }
                             expNumber = !expNumber;
@@ -412,26 +412,26 @@ public class Compiler {
                         if (tokens.size >= valueStart + 2 && TokenType.end == tokens.get(valueStart + 2).getType()){
                             i = valueStart + 4;
                         } else {
-                            throw new EvaluationException("Unexpected token after " + paramName + " declaration.", tokens.get(valueStart + 2));
+                            throw new EvaluationException("Неожиданный токен после объявления " + paramName, tokens.get(valueStart + 2));
                         }
                     } else {
                         int pos = valueStart + 1;
                         boolean expFun = true;
                         while (true){
                             if (tokens.size <= pos) {
-                                throw new EvaluationException("Unexpected token, don't forget to close array declaration with ']'", tokens.last());
+                                throw new EvaluationException("Неожиданный токен, Не забудьте закрывать объявленные массивы символом ']'", tokens.last());
                             }
                             Token previous = tokens.get(pos - 1);
                             Token token = tokens.get(pos);
                             if (expFun) {
                                 if (token.getType() != TokenType.word) {
-                                    expectToken(pos, tokens, TokenType.word, "function name", previous);
+                                    expectToken(pos, tokens, TokenType.word, "название функции", previous);
                                 }
                                 Token functionName = token;
                                 Token color = null;
                                 Token next = tokens.get(pos + 1);
                                 if ("(".equals(next.getTextValue())){
-                                    expectToken(pos + 2, tokens, TokenType.word, "color name", next);
+                                    expectToken(pos + 2, tokens, TokenType.word, "цвет", next);
                                     expectToken(pos + 3, tokens, ")", ")", tokens.get(pos + 2));
                                     color = tokens.get(pos + 2);
                                     pos += 3;
@@ -439,11 +439,11 @@ public class Compiler {
                                 model.getPlots().add(new Plot(functionName, color));
                             } else {
                                 if ("]".equals(token.getTextValue())) {
-                                    expectToken(pos + 1, tokens, TokenType.end, "end of " + paramName + " declaration", token);
+                                    expectToken(pos + 1, tokens, TokenType.end, "Конец объявления параметра " + paramName, token);
                                     i = pos + 2;
                                     break;
                                 } else if (token.getType() != TokenType.comma) {
-                                    expectToken(pos, tokens, TokenType.comma, "',' or ']'", previous);
+                                    expectToken(pos, tokens, TokenType.comma, "',' или ']'", previous);
                                 }
                             }
                             expFun = !expFun;
@@ -451,7 +451,7 @@ public class Compiler {
                         }
                     }
                 } else {
-                    throw new EvaluationException("Unexpected parameter name", firstToken);
+                    throw new EvaluationException("Не известный параметр '" + paramName + "'", firstToken);
                 }
             }
         }
@@ -459,17 +459,17 @@ public class Compiler {
 
     private static void expectToken(int index, Array<Token> tokens, TokenType type, String expectation, Token previousToken) throws EvaluationException {
         if (tokens.size <= index){
-            throw new EvaluationException("Line not finished. Expected: " + expectation, previousToken);
+            throw new EvaluationException("Строка не законченая. Ожидалось: " + expectation, previousToken);
         } else if (tokens.get(index).getType() != type){
-            throw new EvaluationException("Unexpected token. Expected: " + expectation, tokens.get(index));
+            throw new EvaluationException("Неизвестный токен. Ожидалось: " + expectation, tokens.get(index));
         }
     }
 
     private static void expectToken(int index, Array<Token> tokens, String text, String expectation, Token previousToken) throws EvaluationException {
         if (tokens.size <= index){
-            throw new EvaluationException("Line not finished. Expected: " + expectation, previousToken);
+            throw new EvaluationException("Строка не законченая. Ожидалось: " + expectation, previousToken);
         } else if (!text.equals(tokens.get(index).getTextValue())){
-            throw new EvaluationException("Unexpected token. Expected: " + expectation, tokens.get(index));
+            throw new EvaluationException("Неизвестный токен. Ожидалось: " + expectation, tokens.get(index));
         }
     }
 

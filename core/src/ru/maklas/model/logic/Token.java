@@ -78,7 +78,7 @@ public class Token {
     }
 
     public String position(){
-        return "line " + lineNumber + ", column " + start;
+        return "строка " + lineNumber + ", столбец " + start;
     }
 
     public int getSourceLineOffset() {
