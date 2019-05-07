@@ -87,10 +87,11 @@ public class SwingLauncher extends JFrame {
         });
 
         pack();
+        setSize(1600, 900);
+        setLocationRelativeTo(null);
         setVisible(true);
-        setSize(1000, 600);
         SwingUtilities.invokeLater(() -> {
-            split.setDividerLocation(JSplitPane.CENTER_ALIGNMENT);
+            split.setDividerLocation(0.4);
             leftSplit.setDividerLocation(0.8);
             inputComponent.setText("Program program_name;\n" +
                     "\n" +

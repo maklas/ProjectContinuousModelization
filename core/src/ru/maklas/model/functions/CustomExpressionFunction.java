@@ -40,7 +40,7 @@ public class CustomExpressionFunction implements GraphFunction {
             System.err.println(expression.getErrorMessage());
         }
         if (expression.getMissingUserDefinedArguments().length > 0){
-            System.err.println("Missing argumets: " + Arrays.toString(expression.getMissingUserDefinedArguments()));
+            System.err.println("Missing arguments: " + Arrays.toString(expression.getMissingUserDefinedArguments()));
         }
     }
 

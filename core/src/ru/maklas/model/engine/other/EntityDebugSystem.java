@@ -42,8 +42,8 @@ public class EntityDebugSystem extends RenderEntitySystem {
     private Batch batch;
     private OrthographicCamera cam;
     private static final float range = 12;
-    private static final float minCamZoom = 0.0009765625f;
-    private static final float maxCamZoom = 128f;
+    private static final float minCamZoom = (float)(1 / Math.pow(2, 18));
+    private static final float maxCamZoom = (float) Math.pow(2, 7);
     private TextureRegion entityCircle;
     boolean paused = false;
     boolean highlightEntities = false;

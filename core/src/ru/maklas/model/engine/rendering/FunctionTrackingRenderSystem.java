@@ -100,7 +100,7 @@ public class FunctionTrackingRenderSystem extends RenderEntitySystem {
                 for (TrackResult tr : trackResults) {
                     font.setColor(tr.trackColor);
                     font.getColor().a = 1;
-                    int precision = cam.zoom > 3 ? 1 : cam.zoom > 0.01f ? 2 : 3;
+                    int precision = cam.zoom > 3 ? 1 : cam.zoom > 0.01f ? 2 : (int)Math.floor(-Math.log10(cam.zoom));
                     String text = "";
                     if (printXY){
                         text = "(" + StringUtils.df(tr.xVal, precision) + ", " + StringUtils.df(tr.yVal, precision) + ")";
