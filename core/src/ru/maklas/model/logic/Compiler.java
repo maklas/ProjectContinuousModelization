@@ -160,14 +160,14 @@ public class Compiler {
 
         //MODEL
         if (model.getMethod() == null){
-            throw new EvaluationException("Не указан метод интегрирования. Укажите в Params");
+            throw new EvaluationException("Не указан метод интегрирования. Укажите в Params", model.getParamToken());
         }
         if (!methods.contains(model.getMethod().getTextValue(), false)){
             throw new EvaluationException("Не известный метод интегрирования (" + model.getMethod().getTextValue() + "). Возможные методы: " + methods.toString(", "), model.getMethod());
         }
         //SPAN
         if (model.getSpanStart() == null || model.getSpanEnd() == null){
-            throw new EvaluationException("Не указан диапозон интегрирования. укажите диапозон (span) в Params");
+            throw new EvaluationException("Не указан диапозон интегрирования. укажите диапозон (span) в Params", model.getParamToken());
         }
         double spanStart;
         double spanEnd;
@@ -185,7 +185,7 @@ public class Compiler {
             throw new EvaluationException("Конец диапозона интегрировнаия не должен быть раньше начала", model.getSpanEnd());
         }
         if (model.getStep() == null){
-            throw new EvaluationException("Не указан шаг интегрирования. Укажите шаг (step) в Params");
+            throw new EvaluationException("Не указан шаг интегрирования. Укажите шаг (step) в Params", model.getParamToken());
         }
         //STEP
         double step;
@@ -202,11 +202,11 @@ public class Compiler {
         }
         //STEP-ERROR
         if (("rkf".equalsIgnoreCase(model.getMethod().getTextValue()) ||"rk45".equalsIgnoreCase(model.getMethod().getTextValue())) && model.getError() == null){
-            throw new EvaluationException("Для метода с плавающим шагом интегрирования необходимо указать погрешность (error) в Params");
+            throw new EvaluationException("Для метода с плавающим шагом интегрирования необходимо указать погрешность (error) в Params", model.getParamToken());
         }
         //DEFAULTS
         if (model.getDefaults().size == 0){
-            throw new EvaluationException("Не указаны начальные значения функций (x0) в Params");
+            throw new EvaluationException("Не указаны начальные значения функций (x0) в Params", model.getParamToken());
         }
         if (model.getDefaults().size != model.getEquations().size){
             throw new EvaluationException("Начальный значения (x0) не совпадают с функциями");
@@ -336,6 +336,7 @@ public class Compiler {
                 model.getEquations().add(new Equation(name, expression));
             }
         } else if ("params".equalsIgnoreCase(header.getTextValue())){
+            model.setParamToken(header);
             int i = start;
             while (i < end){
                 if (tokens.get(i).getType() == TokenType.end){

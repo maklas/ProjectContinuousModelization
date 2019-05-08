@@ -10,6 +10,7 @@ public class Model {
     private final Array<Equation> equations = new Array<>();
     private final Array<Token> defaults = new Array<>();
     private final Array<Plot> plots = new Array<>();
+    private Token paramToken;
     private Token method;
     private Token spanStart;
     private Token spanEnd;
@@ -91,6 +92,14 @@ public class Model {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public Token getParamToken() {
+        return paramToken;
+    }
+
+    public void setParamToken(Token paramToken) {
+        this.paramToken = paramToken;
     }
 
     @Override

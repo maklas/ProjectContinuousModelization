@@ -6,12 +6,12 @@ public class EvaluationException extends Exception {
     Token token;
 
     public EvaluationException(Token token) {
-        super("Ошибка на позиции " + token.position() + ".");
+        super(token != null ? "Ошибка на позиции " + token.position() + "." : "");
         this.token = token;
     }
 
     public EvaluationException(String message, Token token) {
-        super("Ошибка на позиции " + token.position() + ". " + message);
+        super(token != null ? "Ошибка на позиции " + token.position() + ". " + message : message);
         this.token = token;
     }
 
