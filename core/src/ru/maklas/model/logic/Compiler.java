@@ -19,7 +19,7 @@ public class Compiler {
     private static final Pattern numberPattern = Pattern.compile("-?\\d+(\\.\\d+)?");
     private static final Pattern wordPattern = Pattern.compile("[#a-zA-Z_]\\w*'?");
     private static final Pattern tokenizingPattern = Pattern.compile(wordPattern.pattern() + "|" + numberPattern.pattern() + "|\\[|]|;|\\*|/|\\+|-|=|,|\\(|\\)|\\^");
-    private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\s\\w\\-+.*/^',()\\\\_;=\\[]]");
+    private static final Pattern forbiddenSymbolsPattern = Pattern.compile("[^\\sa-zA-Z0-9\\-+.*/^',()\\\\_;=\\[\\]]");
     private static final Array<String> headers = Array.with("program", "var", "equations", "params");
     private static final Array<String> methods = Array.with("euler", "rk4", "rk45", "rkf");
 
@@ -501,7 +501,7 @@ public class Compiler {
             }
             Matcher matcher = forbiddenSymbolsPattern.matcher(line);
             if (matcher.find()){
-                throw new EvaluationException("Invalid symbol at line " + (lineIndex + 1) + ", col " + matcher.start() +": '" + matcher.group() + "'");
+                throw new EvaluationException("Запрещённый символ '" + matcher.group() + "'", new Token(TokenType.word, lineOffset, line, lineIndex + 1,  matcher.start(), matcher.end()));
             }
             tokenize(line, lineOffset, lineIndex + 1, tokens);
             lineOffset += lines[lineIndex].length() + 1;
@@ -510,7 +510,7 @@ public class Compiler {
     }
 
     /** Parse and add tokens**/
-    private static void tokenize(String line, int sourceOffset, int lineNumber, Array<Token> tokens) throws EvaluationException {
+    private static void tokenize(String line, int sourceLineOffset, int lineNumber, Array<Token> tokens) throws EvaluationException {
         Matcher matcher = tokenizingPattern.matcher(line);
 
         while (matcher.find()){
@@ -556,12 +556,12 @@ public class Compiler {
                 throw EvaluationException.invalidTokenException(group);
             }
             if (type == TokenType.end && tokens.size > 0 && tokens.last().getType() == TokenType.end) continue;
-            Token token = new Token(type, sourceOffset, line, lineNumber, matcher.start(), matcher.end());
+            Token token = new Token(type, sourceLineOffset, line, lineNumber, matcher.start(), matcher.end());
 
             tokens.add(token);
         }
         if (tokens.size > 0 && tokens.last().getType() != TokenType.end)
-        tokens.add(new Token(TokenType.end, sourceOffset, line, lineNumber, line.length() - 1, line.length() - 1));
+        tokens.add(new Token(TokenType.end, sourceLineOffset, line, lineNumber, line.length() - 1, line.length() - 1));
     }
 
 }
