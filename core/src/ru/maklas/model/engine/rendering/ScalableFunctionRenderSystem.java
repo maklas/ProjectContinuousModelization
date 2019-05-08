@@ -215,7 +215,10 @@ public class ScalableFunctionRenderSystem extends RenderEntitySystem {
 
 
     private void renderPoints(Array<Vector2> points){
+        float leftX = Utils.camLeftX(cam);
+        float rightX = Utils.camRightX(cam);
         for (Vector2 p : points) {
+            if (p.x < leftX || p.x > rightX) continue;
             float scale = 0.25f * cam.zoom;
             float x = p.x;
             float y = (float) (p.y / yScale);
