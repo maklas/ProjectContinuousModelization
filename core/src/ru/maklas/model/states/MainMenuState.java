@@ -23,7 +23,7 @@ public class MainMenuState extends State {
     protected void onCreate() {
         A.all().foreach(Asset::load);
         cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        MNW.backgroundColor.set(0.95f, 0.95f, 0.95f, 1);
+        MNW.backgroundColor.set(0.98f, 0.98f, 0.98f, 1);
 
     }
 

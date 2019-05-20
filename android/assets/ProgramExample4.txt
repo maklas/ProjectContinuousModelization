@@ -3,9 +3,9 @@ Program TankProblem; //http://www.sharetechnote.com/html/DE_Modeling_Example_Mix
 Var
 
 Equations
-	x' = -15 * x / 500 + 5 * y / 1000 + 0 * z + 10 * 0.1
-	y' = 15 * x / 500 - 18 * y / 1000 + 3 * z / 400 + 0
-	z' = 0 * x + 14 * y / 1000 - 14 * z / 400 + 0
+    a' = -15 * a / 500 + 5 * b / 1000 + 0 * c + 10 * 0.1
+	b' = 15 * a / 500 - 18 * b / 1000 + 3 * c / 400 + 0
+	c' = 0 * a + 14 * b / 1000 - 14 * c / 400 + 0
 
 Params
     method = rk45
