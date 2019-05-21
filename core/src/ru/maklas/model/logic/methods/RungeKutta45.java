@@ -1,10 +1,8 @@
 package ru.maklas.model.logic.methods;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import org.mariuszgromada.math.mxparser.Argument;
-import org.mariuszgromada.math.mxparser.Expression;
 import ru.maklas.model.logic.model.Model;
 
 public class RungeKutta45 extends BaseMethod {
@@ -52,7 +50,7 @@ public class RungeKutta45 extends BaseMethod {
 
                 function.add(x, result4);
                 yArg.setArgumentValue(result4);
-                double newH = calculateNewStep2(h, err, result4, result5, step / 1024.0, step * 1024.0);
+                double newH = calculateNewStep(h, err, result4, result5, step / 1024.0, step * 1024.0);
                 if (newH < newHMin){
                     newHMin = newH;
                 }
@@ -64,7 +62,7 @@ public class RungeKutta45 extends BaseMethod {
         }
     }
 
-    private static double calculateNewStep2(double oldStep, double err, double rk4, double rk5, double min, double max){
+    private static double calculateNewStep(double oldStep, double err, double rk4, double rk5, double min, double max){
         double s = Math.pow((err * oldStep) / (2 * Math.abs(rk5 - rk4)), 0.25);
         double newStep = oldStep * s;
         if (newStep < min){
