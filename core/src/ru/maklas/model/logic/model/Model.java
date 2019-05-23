@@ -17,6 +17,7 @@ public class Model {
     private Token step;
     private Token error;
     private String source;
+    private final ModelMetaData metaData = new ModelMetaData();
 
     public Model() {
 
@@ -102,6 +103,10 @@ public class Model {
         this.paramToken = paramToken;
     }
 
+    public ModelMetaData getMetaData() {
+        return metaData;
+    }
+
     @Override
     public String toString() {
         return "{" +
@@ -114,6 +119,7 @@ public class Model {
                 ", spanStart=" + spanStart +
                 ", spanEnd=" + spanEnd +
                 ", step=" + step +
+                ", meta=" + metaData +
                 '}';
     }
 }

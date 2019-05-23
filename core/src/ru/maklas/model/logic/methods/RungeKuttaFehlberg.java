@@ -5,10 +5,10 @@ import com.badlogic.gdx.utils.ObjectMap;
 import org.mariuszgromada.math.mxparser.Argument;
 import ru.maklas.model.logic.model.Model;
 
-public class RungeKutta45 extends BaseMethod {
+public class RungeKuttaFehlberg extends BaseMethod {
 
     @Override
-    protected void iterate(Argument xArg, final double from, final double to, final double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) {
+    protected void iterate(Argument xArg, final double from, final double to, final double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) throws InterruptedException {
         double err = model.getError().getAsDouble();
 
 
@@ -58,6 +58,10 @@ public class RungeKutta45 extends BaseMethod {
             h = newHMin;
             if (h > to - x){
                 h = to - x;
+            }
+
+            if (Thread.interrupted()){
+                throw new InterruptedException();
             }
         }
     }

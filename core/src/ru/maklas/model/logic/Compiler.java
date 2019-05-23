@@ -255,8 +255,6 @@ public class Compiler {
                 plot.setColor(color);
             }
         }
-
-
     }
 
     private static void validateExpression(Token expressionToken, String expression) throws EvaluationException {

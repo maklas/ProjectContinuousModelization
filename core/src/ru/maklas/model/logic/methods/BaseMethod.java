@@ -56,7 +56,7 @@ public abstract class BaseMethod implements Method {
      * К этому моменту все атрибуты уже были заполнены,
      * самые первые точки проставлены, определён xArg и всё что остаётся - понапихать точек.
      */
-    protected abstract void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model);
+    protected abstract void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) throws InterruptedException;
 
 
     public static class Function {
