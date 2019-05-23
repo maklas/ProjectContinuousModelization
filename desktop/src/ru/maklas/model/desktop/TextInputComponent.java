@@ -58,9 +58,7 @@ public class TextInputComponent extends JPanel {
         try {
             int start = mToken.getSourceOffset();
             int end = mToken.getSourceOffset() + mToken.getLength();
-            //rTextArea.getCaret().setDot(start);
-            //rTextArea.getCaret().moveDot(end);
-            Object tag = highlighter.addHighlight(start, end, new SquiggleUnderlineHighlightPainter(Color.RED));
+            Object tag = highlighter.addHighlight(start, end, new DefaultHighlighter.DefaultHighlightPainter(Color.RED));
             tags.add(tag);
         } catch (Exception e) {
             e.printStackTrace();

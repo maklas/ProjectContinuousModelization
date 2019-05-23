@@ -1,17 +1,18 @@
 package ru.maklas.model.logic;
 
 
+import org.jetbrains.annotations.Nullable;
+
 public class EvaluationException extends Exception {
 
-    Token token;
+    private Token token;
 
     public EvaluationException(Token token) {
-        super(token != null ? "Ошибка на позиции " + token.position() + "." : "");
         this.token = token;
     }
 
     public EvaluationException(String message, Token token) {
-        super(token != null ? "Ошибка на позиции " + token.position() + ". " + message : message);
+        super(message);
         this.token = token;
     }
 
@@ -19,8 +20,17 @@ public class EvaluationException extends Exception {
         super(message);
     }
 
+    @Nullable
     public Token getToken() {
         return token;
+    }
+
+    @Override
+    public String getMessage() {
+        if (false){
+            return (token == null ? "" : "Строка " + token.getLineNumber() + ", столбец " + token.getStart() + ". ") + super.getMessage();
+        }
+        return super.getMessage();
     }
 
     public static EvaluationException invalidTokenException(String value){
@@ -28,6 +38,13 @@ public class EvaluationException extends Exception {
     }
 
     public static EvaluationException unexpected(Token token){
-        return new EvaluationException("Неожиданный токен '" + token.getTextValue() + "'", token);
+        switch (token.getLength()){
+            case 0:
+                return new EvaluationException("Неожиданный токен '" + token.getTextValue() + "'", token);
+            case 1:
+                return new EvaluationException("Неожиданный символ '" + token.getTextValue() + "'", token);
+            default:
+                return new EvaluationException("Неожиданное слово '" + token.getTextValue() + "'", token);
+        }
     }
 }

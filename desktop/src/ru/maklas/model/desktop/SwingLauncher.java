@@ -1,5 +1,6 @@
 package ru.maklas.model.desktop;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglAWTCanvas;
 import com.badlogic.gdx.math.Vector2;
@@ -15,14 +16,14 @@ import ru.maklas.model.functions.FunctionUtils;
 import ru.maklas.model.logic.Compiler;
 import ru.maklas.model.logic.EvaluationException;
 import ru.maklas.model.logic.Token;
-import ru.maklas.model.logic.methods.Euler;
 import ru.maklas.model.logic.methods.Method;
-import ru.maklas.model.logic.methods.RungeKutta4;
-import ru.maklas.model.logic.methods.RungeKutta45;
+import ru.maklas.model.logic.methods.MethodProvider;
+import ru.maklas.model.logic.methods.MethodType;
 import ru.maklas.model.logic.model.Model;
 import ru.maklas.model.logic.model.Plot;
 import ru.maklas.model.mnw.MNW;
 import ru.maklas.model.states.FunctionGraphState;
+import ru.maklas.model.states.LoadingState;
 import ru.maklas.model.utils.Log;
 import ru.maklas.model.utils.StringUtils;
 import ru.maklas.model.utils.gsm_lib.GSMClearAndSet;
@@ -30,61 +31,55 @@ import ru.maklas.model.utils.gsm_lib.GSMClearAndSet;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SwingLauncher extends JFrame {
+
+    private static Color COLOR_SUCCESS = new Color(0, 0.65f, 0);
+    private static Color COLOR_ERROR = Color.RED;
+    private static Color COLOR_INTERRUPTED = new Color(0.3f, 0.65f, 0);
+
+    private final JTextArea errorTextArea;
+    private ExecutorService executorService;
+    private AtomicBoolean executing = new AtomicBoolean(false);
+    private final TextInputComponent inputComponent;
+    private final Container libgdxComponent;
 
     public SwingLauncher() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
-        TextInputComponent inputComponent = new TextInputComponent();
-        JTextArea errorTextArea = new JTextArea();
+        inputComponent = new TextInputComponent();
+        errorTextArea = new JTextArea();
+        errorTextArea.setLineWrap(true);
         errorTextArea.setEnabled(false);
         errorTextArea.setDisabledTextColor(Color.RED);
+        errorTextArea.setFont(errorTextArea.getFont().deriveFont(16f));
+        errorTextArea.setFont(new Font(Font.DIALOG, Font.BOLD, 16));
         JSplitPane leftSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
         leftSplit.setTopComponent(inputComponent);
         leftSplit.setBottomComponent(errorTextArea);
 
-        Container libgdxComponent = createLibgdxComponent();
+        libgdxComponent = createLibgdxComponent();
         split.setLeftComponent(leftSplit);
         split.setRightComponent(libgdxComponent);
         setContentPane(split);
 
         JMenuBar menu = new JMenuBar();
-        JMenuItem item = new JMenuItem("Launch");
-        menu.add(item);
+        JMenuItem launchButton = new JMenuItem("Запустить");
+        JMenuItem cancelButton = new JMenuItem("Прервать");
+        menu.add(launchButton);
+        menu.add(cancelButton);
         setJMenuBar(menu);
-        item.addActionListener((e) -> {
-            inputComponent.clearErrors();
-            errorTextArea.setText("");
-            String text = inputComponent.getText();
-            Model model;
-            try {
-                long start = System.nanoTime();
-                model = Compiler.compile(text);
-                long end = System.nanoTime();
-                Log.trace("Model created. Time: " + StringUtils.dfSigDigits((end - start) / 1000.0, 2, 3)  + " us");
-                Array<Entity> entities = convertToEntities(model);
-                Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, model.getSpanStart().getAsDouble(), model.getSpanEnd().getAsDouble()))));
-                SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
-                errorTextArea.setText("\u041a\u043e\u043c\u043f\u0438\u043b\u044f\u0446\u0438\u044f \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0430 \u0443\u0441\u043f\u0435\u0448\u043d\u043e");
-                errorTextArea.setDisabledTextColor(new Color(0, 0.65f, 0));
-            } catch (Exception exception) {
-                errorTextArea.setDisabledTextColor(Color.RED);
-                if (exception instanceof EvaluationException){
-                    errorTextArea.setText(exception.getMessage());
-                    Token token = ((EvaluationException) exception).getToken();
-                    if (token != null) {
-                        inputComponent.highlightError(token);
-                    }
-                } else {
-                    System.err.println("Unexpected Exception!!!!");
-                    errorTextArea.setText(ExceptionUtils.getStackTrace(exception));
-                }
-                exception.printStackTrace();
-            }
-        });
+
+        /* При нажатии "Запустить" */
+        launchButton.addActionListener(e -> onLaunch());
+
+        /* При нажатии "Прервать" */
+        cancelButton.addActionListener(e -> onInterrupt());
 
         pack();
         setSize(1600, 900);
@@ -93,39 +88,105 @@ public class SwingLauncher extends JFrame {
         SwingUtilities.invokeLater(() -> {
             split.setDividerLocation(0.4);
             leftSplit.setDividerLocation(0.8);
-            inputComponent.setText("Program program_name;\n" +
-                    "\n" +
-                    "Var\n" +
-                    "    a = 0.001;\n" +
-                    "    b = 0.07;\n" +
-                    "    c = 0.01;\n" +
-                    "\n" +
-                    "Equations\n" +
-                    "    susc' = -a * susc * sick;\n" +
-                    "    sick' = a * susc * sick - (b + c) * sick;\n" +
-                    "    cured' = b * sick;\n" +
-                    "\n" +
-                    "Params\n" +
-                    "    method = rk45\n" +
-                    "    span = [0, 50];\n" +
-                    "    step = 0.5;\n" +
-                    "    error = 0.0265;\n" +
-                    "    x0 = [620, 10, 70];\n" +
-                    "    plot = [susc', sick', cured'];");
+            inputComponent.setText(getDefaultText());
             inputComponent.dispatchEvent(new ActionEvent(split, 0, "click"));
         });
+    }
+
+
+    private void onLaunch(){
+        if (executing.get()){
+            return;
+        }
+
+        inputComponent.clearErrors();
+        print("", COLOR_SUCCESS);
+        String text = inputComponent.getText();
+        Model model;
+        try {
+            long start = System.nanoTime();
+            model = Compiler.compile(text);
+            model.getMetaData().compilationTimeNano = System.nanoTime() - start;
+            Log.trace("Model created. Time: " + StringUtils.dfSigDigits(model.getMetaData().compilationTimeUs(), 2, 3)  + " us");
+            print("Компиляция выполнена успешно за " + StringUtils.dfSeparated(model.getMetaData().compilationTimeUs(), 2, 2) + " мкс", COLOR_SUCCESS);
+        } catch (Exception exception) {
+            if (exception instanceof EvaluationException){
+                print(exception.getMessage(), COLOR_ERROR);
+                Token token = ((EvaluationException) exception).getToken();
+                if (token != null) {
+                    inputComponent.highlightError(token);
+                }
+            } else {
+                Log.error("Unexpected Exception!!!!", exception);
+                print(ExceptionUtils.getStackTrace(exception), COLOR_ERROR);
+            }
+            return;
+        }
+
+        if (executorService == null || executorService.isTerminated()){
+            executorService = Executors.newSingleThreadExecutor();
+        }
+
+        Application app = Gdx.app;
+        if (executing.compareAndSet(false, true)){
+            Log.debug("Execution started");
+            app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new LoadingState())));
+            executorService.submit(() -> {
+                try {
+                    Array<Entity> entities = convertToEntities(model);
+                    app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, model.getSpanStart().getAsDouble(), model.getSpanEnd().getAsDouble()))));
+                    SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
+                } catch (Exception e1) {
+                    if (e1 instanceof InterruptedException){
+
+                        return;
+                    }
+                    SwingUtilities.invokeLater(() -> {
+                        if (e1 instanceof EvaluationException){
+                            print(e1.getMessage(), COLOR_ERROR);
+                            Token token = ((EvaluationException) e1).getToken();
+                            if (token != null) {
+                                inputComponent.highlightError(token);
+                            }
+                        } else {
+                            Log.error("Unexpected Exception!!!!", e1);
+                            print(ExceptionUtils.getStackTrace(e1), COLOR_ERROR);
+                        }
+                    });
+                } finally {
+                    executing.set(false);
+                    Log.debug("Execution finished");
+                }
+            });
+        } else {
+            errorTextArea.setText("Ошибка. Поток уже занят");
+        }
+
+    }
+
+    private void onInterrupt() {
+        if (executing.get()){
+            executorService.shutdown();
+        }
+        inputComponent.clearErrors();
+        print("Операция прервана", COLOR_INTERRUPTED);
+        Log.debug("Execution Interrupted");
     }
 
     private static Array<Entity> convertToEntities(Model model) throws Exception {
         Array<Entity> entities = new Array<>();
 
-        Method method = getMethod(model.getMethod().getTextValue());
+        MethodType methodType = MethodType.get(model.getMethod().getTextValue());
+        Method method = MethodProvider.getMethod(methodType);
 
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime();
         Array<Array<Vector2>> functions = method.solve(model);
-        long end = System.currentTimeMillis();
-        Log.trace("Method " + model.getMethod().getTextValue() + ". Time: " + (end - start) + " ms. Points: " + (functions.size == 0 ? 0 : functions.get(0).size));
+        model.getMetaData().methodExecutionTimeNano = System.nanoTime() - start;
+        Log.trace("Method " + model.getMethod().getTextValue() + ". Time: " + StringUtils.dfSeparated(model.getMetaData().methodExecutionTimeMillis(), 0, 1) + " ms. Functions: " + functions.size + ". Points: " + (functions.size == 0 ? 0 : functions.get(0).size));
 
+        if (Thread.interrupted()){
+            throw new InterruptedException();
+        }
         for (int i = 0; i < model.getEquations().size; i++) {
             if (!model.getPlots().isEmpty()) {
                 Plot plot = null;
@@ -162,6 +223,9 @@ public class SwingLauncher extends JFrame {
             val *= function.size;
         }
 
+        if (Thread.interrupted()){
+            throw new InterruptedException();
+        }
 
         if (val < 5_000_000_000_000L) {
             int size = entities.size;
@@ -191,18 +255,6 @@ public class SwingLauncher extends JFrame {
 
         return entities;
     }
-    
-    private static Method getMethod(String name){
-        if (name.equalsIgnoreCase("euler")){
-            return new Euler();
-        } else if (name.equalsIgnoreCase("rk4")){
-            return new RungeKutta4();
-        } else if (name.equalsIgnoreCase("rk45") || name.equalsIgnoreCase("rkf")){
-            return new RungeKutta45();
-        } else {
-            throw new RuntimeException("Unknown method: " + name);
-        }
-    }
 
     private static boolean equals(Token equationName, Token plotName){
         return equationName != null &&
@@ -217,6 +269,50 @@ public class SwingLauncher extends JFrame {
         container.setLayout(new BorderLayout());
         container.add(canvas.getCanvas(), BorderLayout.CENTER);
         return container;
+    }
+
+    private static String getDefaultText(){
+        return "Program program_name;\n" +
+                "\n" +
+                "Var\n" +
+                "    a = 0.001;\n" +
+                "    b = 0.07;\n" +
+                "    c = 0.01;\n" +
+                "\n" +
+                "Equations\n" +
+                "    susc' = -a * susc * sick;\n" +
+                "    sick' = a * susc * sick - (b + c) * sick;\n" +
+                "    cured' = b * sick;\n" +
+                "\n" +
+                "Params\n" +
+                "    method = rk4\n" +
+                "    span = [0, 50];\n" +
+                "    step = 0.5;\n" +
+                "    error = 0.0265;\n" +
+                "    x0 = [620, 10, 70];\n" +
+                "    plot = [susc', sick', cured'];";
+    }
+
+    private void print(String text, Color color){
+        if (SwingUtilities.isEventDispatchThread()){
+            errorTextArea.setText(text);
+            errorTextArea.setDisabledTextColor(color);
+        } else {
+            SwingUtilities.invokeLater(() -> {
+                errorTextArea.setText(text);
+                errorTextArea.setDisabledTextColor(color);
+            });
+        }
+    }
+
+    private void append(String text){
+        if (SwingUtilities.isEventDispatchThread()){
+            errorTextArea.append("\n" + text);
+        } else {
+            SwingUtilities.invokeLater(() -> {
+                errorTextArea.setText("\n" + text);
+            });
+        }
     }
 
     public static void main(String[] args) {

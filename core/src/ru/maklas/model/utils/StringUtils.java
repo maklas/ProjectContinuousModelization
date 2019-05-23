@@ -37,6 +37,25 @@ public class StringUtils {
         return StringUtils.df(d, -(logFloor - (significantDigits - 1)));
     }
 
+    /**
+     * <p>
+     *      If double is more than zero, uses default digit after point.
+     *      If does is less than 0, gets to significant points specified.
+     *      Also separates thousands with <b>'</b> sign.
+     *</p>
+     * <p>
+     *     Example:
+     *     <li>1234567.12345, 2, 3 <b>-></b> "1'234'567.12"</li>
+     *     <li>0.00012345, 2, 3 <b>-></b> "0.000123"</li>
+     * </p>
+     */
+    public static String dfSeparated(double d, int defaultDigitsAfterPoint, int significantDigits){
+        int logFloor = d == 0d ? 0 : (int) Math.floor(Math.log10(d));
+        if (logFloor >= 0) return String.format(Locale.ENGLISH, "%(,." + defaultDigitsAfterPoint + "f", d).replaceAll(",", "'");
+        int numbersAfterComma = -(logFloor - (significantDigits - 1));
+        return String.format(Locale.ENGLISH, "%(,." + numbersAfterComma + "f", d);
+    }
+
     public static String df(double d){
         return df(d, 2);
     }
