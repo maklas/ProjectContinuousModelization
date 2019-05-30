@@ -48,6 +48,22 @@ public class Animation {
         tpf = time/frames.length;
     }
 
+    public void update(float dt){
+        time += dt;
+        if (time >= tpf) {
+            time -= tpf;
+            currentFrame++;
+            if (currentFrame == frames.length){
+                if (!looped){
+                    enabled = false;
+                    time = 0;
+                }
+                currentFrame = 0;
+            }
+        }
+        ru.setRegion(enabled ? frames[currentFrame] : defaultFrame);
+    }
+
     @Override
     public String toString() {
         return "{" +

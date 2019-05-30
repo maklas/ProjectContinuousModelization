@@ -55,20 +55,4 @@ public class MainMenuState extends State {
     protected void dispose() {
 
     }
-
-    /*public void process(String text){
-        try {
-            Model model = Compiler.compile(text);
-            this.text = String.valueOf(model);
-            try {
-                Array<Array<Vector2>> points = new Euler().solve(model);
-                pushState(new FunctionGraphState(new Array<>(), points));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } catch (EvaluationException e) {
-            this.text = ExceptionUtils.getStackTrace(e);
-        }
-        System.out.println(this.text);
-    }*/
 }

@@ -3,6 +3,7 @@ package ru.maklas.model.logic.methods;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
+import org.jetbrains.annotations.Nullable;
 import org.mariuszgromada.math.mxparser.Argument;
 import org.mariuszgromada.math.mxparser.Expression;
 import ru.maklas.model.logic.model.Model;
@@ -10,8 +11,14 @@ import ru.maklas.model.logic.model.Var;
 
 public abstract class BaseMethod implements Method {
 
+    @Nullable
+    private MethodCallback callback;
+    private double oldProgress;
+
     @Override
-    public Array<Array<Vector2>> solve(Model model) throws Exception {
+    public Array<Array<Vector2>> solve(Model model, @Nullable MethodCallback callback) throws Exception {
+        this.callback = callback;
+        oldProgress = 0;
         ObjectMap<String, Argument> environment = new ObjectMap<>();
         //1. Saving static vars
         for (Var var : model.getVars()) {
@@ -58,6 +65,15 @@ public abstract class BaseMethod implements Method {
      */
     protected abstract void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) throws InterruptedException;
 
+    protected final void notifyCallback(double progress) throws InterruptedException {
+        if (Thread.interrupted()){
+            throw new InterruptedException();
+        }
+        if (callback != null && Math.abs(progress - oldProgress) > 0.01) {
+            callback.progressChanged(progress);
+            oldProgress = progress;
+        }
+    }
 
     public static class Function {
         Array<Vector2> points = new Array<>();

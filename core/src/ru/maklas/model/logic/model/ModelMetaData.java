@@ -8,7 +8,11 @@ public class ModelMetaData {
 
 
     public double compilationTimeUs(){
-        return compilationTimeNano / 1000.0;
+        return compilationTimeNano / 1_000.0;
+    }
+
+    public double compilationTimeMillis(){
+        return compilationTimeNano / 1_000_000.0;
     }
 
     public double methodExecutionTimeMillis(){

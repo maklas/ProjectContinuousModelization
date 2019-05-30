@@ -8,7 +8,7 @@ import ru.maklas.model.logic.model.Model;
 public class Euler extends BaseMethod {
 
     @Override
-    protected void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) {
+    protected void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) throws InterruptedException {
         double x = from;
         xArg.setArgumentValue(x);
         int iterations = (int) Math.ceil((to - from) / step);
@@ -21,6 +21,7 @@ public class Euler extends BaseMethod {
                 val.setArgumentValue(val.getArgumentValue() + (t * step));
                 function.add(x, val.getArgumentValue());
             }
+            notifyCallback((i + 1.0) / iterations);
         }
     }
 }

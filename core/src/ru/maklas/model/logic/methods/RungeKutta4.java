@@ -8,7 +8,7 @@ import ru.maklas.model.logic.model.Model;
 public class RungeKutta4 extends BaseMethod {
 
     @Override
-    protected void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) {
+    protected void iterate(Argument xArg, double from, double to, double step, ObjectMap<String, Argument> environment, Array<Function> functions, Model model) throws InterruptedException {
         double x = from;
         xArg.setArgumentValue(x);
         int iterations = (int) Math.ceil((to - from) / step);
@@ -34,6 +34,7 @@ public class RungeKutta4 extends BaseMethod {
                 function.add(x, result);
                 yArg.setArgumentValue(result);
             }
+            notifyCallback((i + 1.0) / iterations);
         }
     }
 }

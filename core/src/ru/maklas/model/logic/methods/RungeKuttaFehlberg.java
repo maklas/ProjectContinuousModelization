@@ -14,6 +14,8 @@ public class RungeKuttaFehlberg extends BaseMethod {
 
         double x = from;
         double h = step;
+        final double min = step / 4096.0;
+        final double max = step * 1024.0;
         while (x < to){
             x += h;
             double newHMin = Double.MAX_VALUE;
@@ -50,7 +52,7 @@ public class RungeKuttaFehlberg extends BaseMethod {
 
                 function.add(x, result4);
                 yArg.setArgumentValue(result4);
-                double newH = calculateNewStep(h, err, result4, result5, step / 1024.0, step * 1024.0);
+                double newH = clamp(calculateNewStep(h, err, result4, result5), min, max);
                 if (newH < newHMin){
                     newHMin = newH;
                 }
@@ -59,21 +61,16 @@ public class RungeKuttaFehlberg extends BaseMethod {
             if (h > to - x){
                 h = to - x;
             }
-
-            if (Thread.interrupted()){
-                throw new InterruptedException();
-            }
+            notifyCallback(x / to);
         }
     }
 
-    private static double calculateNewStep(double oldStep, double err, double rk4, double rk5, double min, double max){
+    private static double calculateNewStep(double oldStep, double err, double rk4, double rk5){
         double s = Math.pow((err * oldStep) / (2 * Math.abs(rk5 - rk4)), 0.25);
-        double newStep = oldStep * s;
-        if (newStep < min){
-            newStep = min;
-        } else if (newStep > max){
-            newStep = max;
-        }
-        return newStep;
+        return oldStep * s;
+    }
+
+    private static double clamp(double val, double min, double max){
+        return val < min ? min : val > max ? max : val;
     }
 }

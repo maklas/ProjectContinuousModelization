@@ -19,6 +19,7 @@ public class ImageAssets extends Asset{
     public BitmapFont font;
     public TextureRegion whiteBox10px;
     public TextureRegion whiteBox10pxHalfAlpha;
+    public TextureRegion[] loading;
 
     @Override
     protected void loadImpl() {
@@ -31,6 +32,13 @@ public class ImageAssets extends Asset{
         laserMiddle = new TextureRegion(new Texture("laser/laser_middle.png"));
         laserEnd = new TextureRegion(new Texture("laser/laser_end.png"));
         laserEffect = new TextureRegion(new Texture("laser/laser_effect.png"));
+        TextureRegion[][] loadingCircle_12_by_4 = TextureRegion.split(new Texture("loadingCircle.png"), 188, 188);
+        loading = new TextureRegion[12 * 4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 12; j++) {
+                loading[i * 12 + j] = loadingCircle_12_by_4[i][j];
+            }
+        }
 
         font = new BitmapFont();
         font.setUseIntegerPositions(false);

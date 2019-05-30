@@ -6,6 +6,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglAWTCanvas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.jetbrains.annotations.Nullable;
 import ru.maklas.mengine.Entity;
 import ru.maklas.model.ProjectContinuousModelization;
 import ru.maklas.model.engine.M;
@@ -17,6 +18,7 @@ import ru.maklas.model.logic.Compiler;
 import ru.maklas.model.logic.EvaluationException;
 import ru.maklas.model.logic.Token;
 import ru.maklas.model.logic.methods.Method;
+import ru.maklas.model.logic.methods.MethodCallback;
 import ru.maklas.model.logic.methods.MethodProvider;
 import ru.maklas.model.logic.methods.MethodType;
 import ru.maklas.model.logic.model.Model;
@@ -24,9 +26,11 @@ import ru.maklas.model.logic.model.Plot;
 import ru.maklas.model.mnw.MNW;
 import ru.maklas.model.states.FunctionGraphState;
 import ru.maklas.model.states.LoadingState;
+import ru.maklas.model.states.MainMenuState;
 import ru.maklas.model.utils.Log;
 import ru.maklas.model.utils.StringUtils;
 import ru.maklas.model.utils.gsm_lib.GSMClearAndSet;
+import ru.maklas.model.utils.gsm_lib.State;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,9 +47,10 @@ public class SwingLauncher extends JFrame {
 
     private final JTextArea errorTextArea;
     private ExecutorService executorService;
-    private AtomicBoolean executing = new AtomicBoolean(false);
     private final TextInputComponent inputComponent;
     private final Container libgdxComponent;
+    /** В процессе компиляции или выполнения метода.**/
+    private AtomicBoolean executing = new AtomicBoolean(false);
 
     public SwingLauncher() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -95,21 +100,25 @@ public class SwingLauncher extends JFrame {
 
 
     private void onLaunch(){
-        if (executing.get()){
+        //Если мы и так сейчас в процессе, выдаём ошибку.
+        if (!executing.compareAndSet(false, true)){
+            print("Ошибка. Поток уже занят", COLOR_ERROR);
             return;
         }
 
+        //Начинаем компиляцию
         inputComponent.clearErrors();
         print("", COLOR_SUCCESS);
-        String text = inputComponent.getText();
+        String sourceCode = inputComponent.getText();
         Model model;
         try {
             long start = System.nanoTime();
-            model = Compiler.compile(text);
+            model = Compiler.compile(sourceCode);
             model.getMetaData().compilationTimeNano = System.nanoTime() - start;
             Log.trace("Model created. Time: " + StringUtils.dfSigDigits(model.getMetaData().compilationTimeUs(), 2, 3)  + " us");
-            print("Компиляция выполнена успешно за " + StringUtils.dfSeparated(model.getMetaData().compilationTimeUs(), 2, 2) + " мкс", COLOR_SUCCESS);
+            print("Компиляция выполнена успешно за " + StringUtils.dfSeparated(model.getMetaData().compilationTimeMillis(), 2, 2) + " мс", COLOR_SUCCESS);
         } catch (Exception exception) {
+            //Ошибка во время компиляции. Закругляемся
             if (exception instanceof EvaluationException){
                 print(exception.getMessage(), COLOR_ERROR);
                 Token token = ((EvaluationException) exception).getToken();
@@ -120,68 +129,75 @@ public class SwingLauncher extends JFrame {
                 Log.error("Unexpected Exception!!!!", exception);
                 print(ExceptionUtils.getStackTrace(exception), COLOR_ERROR);
             }
+            executing.set(false);
             return;
         }
 
-        if (executorService == null || executorService.isTerminated()){
+        if (executorService == null || executorService.isShutdown()) {
             executorService = Executors.newSingleThreadExecutor();
         }
 
+
         Application app = Gdx.app;
-        if (executing.compareAndSet(false, true)){
-            Log.debug("Execution started");
-            app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new LoadingState())));
-            executorService.submit(() -> {
-                try {
-                    Array<Entity> entities = convertToEntities(model);
-                    app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, model.getSpanStart().getAsDouble(), model.getSpanEnd().getAsDouble()))));
-                    SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
-                } catch (Exception e1) {
-                    if (e1 instanceof InterruptedException){
+        Log.debug("Execution started");
+        LoadingState loadingState = new LoadingState();
 
-                        return;
-                    }
-                    SwingUtilities.invokeLater(() -> {
-                        if (e1 instanceof EvaluationException){
-                            print(e1.getMessage(), COLOR_ERROR);
-                            Token token = ((EvaluationException) e1).getToken();
-                            if (token != null) {
-                                inputComponent.highlightError(token);
-                            }
-                        } else {
-                            Log.error("Unexpected Exception!!!!", e1);
-                            print(ExceptionUtils.getStackTrace(e1), COLOR_ERROR);
-                        }
-                    });
-                } finally {
-                    executing.set(false);
-                    Log.debug("Execution finished");
+        app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(loadingState)));
+        executorService.submit(() -> {
+            try {
+                Array<Entity> entities = convertToEntities(model, (progress) -> app.postRunnable(() -> loadingState.setProgress(progress)));
+                append("Метод " + MethodType.get(model.getMethod().getTextValue()).getLocalizedName() + " выполнен за " + StringUtils.dfSeparated(model.getMetaData().methodExecutionTimeMillis(), 2, 3) + " мс");
+                app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new FunctionGraphState(entities, model.getSpanStart().getAsDouble(), model.getSpanEnd().getAsDouble()))));
+                SwingUtilities.invokeLater(() -> libgdxComponent.getComponent(0).requestFocus());
+            } catch (Exception e1) {
+                if (e1 instanceof InterruptedException){
+                    Log.trace("Interrupted");
+                    return;
                 }
-            });
-        } else {
-            errorTextArea.setText("Ошибка. Поток уже занят");
-        }
-
+                SwingUtilities.invokeLater(() -> {
+                    if (e1 instanceof EvaluationException){
+                        print(e1.getMessage(), COLOR_ERROR);
+                        Token token = ((EvaluationException) e1).getToken();
+                        if (token != null) {
+                            inputComponent.highlightError(token);
+                        }
+                    } else {
+                        Log.error("Unexpected Exception!!!!", e1);
+                        print(ExceptionUtils.getStackTrace(e1), COLOR_ERROR);
+                    }
+                });
+            } finally {
+                executing.set(false);
+                Log.debug("Execution finished");
+            }
+        });
     }
 
     private void onInterrupt() {
-        if (executing.get()){
-            executorService.shutdown();
+        ExecutorService executorService = this.executorService;
+        if (executorService != null && executing.get()){
+            executorService.shutdownNow();
+            if (Gdx.app != null){
+                Gdx.app.postRunnable(() -> MNW.gsm.setCommand(new GSMClearAndSet(new MainMenuState())));
+            }
+
+            inputComponent.clearErrors();
+            print("Операция прервана", COLOR_INTERRUPTED);
+            Log.debug("Execution Interrupted");
         }
-        inputComponent.clearErrors();
-        print("Операция прервана", COLOR_INTERRUPTED);
-        Log.debug("Execution Interrupted");
     }
 
-    private static Array<Entity> convertToEntities(Model model) throws Exception {
+    private static Array<Entity> convertToEntities(Model model, @Nullable MethodCallback callback) throws Exception {
         Array<Entity> entities = new Array<>();
 
         MethodType methodType = MethodType.get(model.getMethod().getTextValue());
         Method method = MethodProvider.getMethod(methodType);
 
+        Log.debug("Start: " + System.currentTimeMillis());
         long start = System.nanoTime();
-        Array<Array<Vector2>> functions = method.solve(model);
+        Array<Array<Vector2>> functions = method.solve(model, callback);
         model.getMetaData().methodExecutionTimeNano = System.nanoTime() - start;
+        Log.debug("End: " + System.currentTimeMillis());
         Log.trace("Method " + model.getMethod().getTextValue() + ". Time: " + StringUtils.dfSeparated(model.getMetaData().methodExecutionTimeMillis(), 0, 1) + " ms. Functions: " + functions.size + ". Points: " + (functions.size == 0 ? 0 : functions.get(0).size));
 
         if (Thread.interrupted()){
@@ -262,7 +278,6 @@ public class SwingLauncher extends JFrame {
                         || (equationName.getTextValue().substring(0, equationName.getTextValue().length() - 1).equals(plotName.getTextValue())));
     }
 
-
     private static Container createLibgdxComponent(){
         LwjglAWTCanvas canvas = new LwjglAWTCanvas(new ProjectContinuousModelization());
         Container container = new Container();
@@ -309,9 +324,7 @@ public class SwingLauncher extends JFrame {
         if (SwingUtilities.isEventDispatchThread()){
             errorTextArea.append("\n" + text);
         } else {
-            SwingUtilities.invokeLater(() -> {
-                errorTextArea.setText("\n" + text);
-            });
+            SwingUtilities.invokeLater(() -> errorTextArea.append("\n" + text));
         }
     }
 
