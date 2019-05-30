@@ -4,23 +4,28 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import ru.maklas.model.assets.A;
-import ru.maklas.model.engine.rendering.RenderUnit;
 import ru.maklas.model.engine.rendering.TextureUnit;
 import ru.maklas.model.utils.Log;
+import ru.maklas.model.utils.RadialSprite;
 import ru.maklas.model.utils.StringUtils;
 import ru.maklas.model.utils.gsm_lib.State;
 
 public class LoadingState extends State {
 
-    OrthographicCamera cam;
-    RenderUnit renderUnit;
+    private OrthographicCamera cam;
+    private RadialSprite radialSprite;
+    private TextureRegion image;
 
     @Override
     protected void onCreate() {
         cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        renderUnit = new TextureUnit(A.images.loading[0]).pivot(0.5f, 0.5f).scale(0.5f);
+        image = A.images.loading[A.images.loading.length - 1];
+        radialSprite = new RadialSprite(image);
+        radialSprite.setOrigin(image.getRegionWidth() / 2f, image.getRegionHeight() / 2f);
+        radialSprite.setAngle(360);
     }
 
     @Override
@@ -29,19 +34,17 @@ public class LoadingState extends State {
 
     @Override
     protected void render(Batch batch) {
-        batch.setColor(Color.WHITE);
+        radialSprite.setColor(Color.SKY);
         batch.setProjectionMatrix(cam.combined);
         batch.begin();
-        renderUnit.draw(batch, 0, 0, 0);
+        radialSprite.draw(batch, -image.getRegionWidth() / 2f, -image.getRegionHeight() / 2f, image.getRegionWidth(), -image.getRegionHeight());
         batch.end();
     }
 
     public void setProgress(double progress){
-        if (renderUnit == null) return;
-        Log.trace("Setting progress: " + StringUtils.df(progress));
+        if (radialSprite == null) return;
         progress = MathUtils.clamp(progress, 0, 1);
-        int frame = MathUtils.clamp((int) Math.round(progress * A.images.loading.length), 0, A.images.loading.length - 1);
-        renderUnit.setRegion(A.images.loading[frame]);
+        radialSprite.setAngle((float) ((1 - progress) * 360));
     }
 
     @Override

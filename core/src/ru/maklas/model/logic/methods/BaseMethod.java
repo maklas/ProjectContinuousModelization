@@ -69,7 +69,7 @@ public abstract class BaseMethod implements Method {
         if (Thread.interrupted()){
             throw new InterruptedException();
         }
-        if (callback != null && Math.abs(progress - oldProgress) > 0.01) {
+        if (callback != null && Math.abs(progress - oldProgress) > 0.001) {
             callback.progressChanged(progress);
             oldProgress = progress;
         }
